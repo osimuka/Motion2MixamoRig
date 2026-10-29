@@ -87,7 +87,7 @@ def save_mixamo_rotations(
 
 def run_pipeline(
     video: Path | None,
-    rig: Path,
+    rig: Path | None,
     *,
     image: Path | None = None,
     device: str = "cpu",
@@ -112,6 +112,7 @@ def run_pipeline(
     Blender extension). When omitted, a timestamped directory is created.
     `no_preview` still writes the NPZ/GLB products but skips rendered previews.
     `foot_lock` pins planted feet using GVHMR's foot contact (when available).
+    `rig=None` uses the original built-in T-pose mannequin.
     """
     if image is None and video is None:
         raise ValueError("run_pipeline needs a video or an image")
@@ -119,7 +120,7 @@ def run_pipeline(
         image = Path(image).resolve()
     if video is not None:
         video = Path(video).resolve()
-    rig = Path(rig).resolve()
+    rig = Path(rig).resolve() if rig is not None else None
     started = datetime.now()
     t0 = time.time()
     source = image if image is not None else video
@@ -179,11 +180,32 @@ def run_pipeline(
 
         stage = "retarget"
         writer.emit("retarget", 0.70, "Retargeting animation")
+        if rig is None:
+            from .mixamo.mannequin import NAME, build_mannequin
+            from .mixamo.kinematics import forward_kinematics, world_positions_m
+            from .mixamo.tpose_calibration import calibrate_rig
+
+            rig = run_dir / f"{NAME}.json"
+            asset = build_mannequin(rig)
+            import json
+
+            rig.write_text(json.dumps({
+                "kind": "procedural_mannequin",
+                "name": NAME,
+                "units": "centimeters",
+                "bones": {
+                    name: {"parent": bone.parent, "rest_world": bone.rest_world.tolist()}
+                    for name, bone in asset.rig.bones.items()
+                },
+            }, indent=2), encoding="utf-8")
+            rest = world_positions_m(asset.rig, forward_kinematics(asset.rig, {}))
+            calibration = calibrate_rig(asset.rig, rest, {"character": NAME})
+        else:
+            calibration = load_calibration(rig)
+            asset = load_character_asset(rig, textures=True)
         print(f"calibrating rig {rig.name}")
-        calibration = load_calibration(rig)
         rest_err = verify_rest_fk(calibration.skeleton_rig)
-        mapping = build_mapping(calibration, verbose=verbose)
-        asset = load_character_asset(rig, textures=True)
+        mapping = build_mapping(calibration, verbose=verbose, target_rig=asset.rig)
         skin_err = rest_skin_error(asset)
         if verbose:
             print(f"rest FK error  {rest_err:.3e}   rest skin error {skin_err:.3e} cm")

@@ -2,22 +2,28 @@
 
 This 4onstudios LTD improvement fork of
 [Motion2MixamoRig](https://github.com/MaxLiu22/Motion2MixamoRig) provides a
-browser UI for one-person video or still-image input and a Mixamo character
-FBX. It produces a ZIP containing `mixamo_character.glb` and the available
-motion/diagnostics files. Input files and intermediate run data are temporary;
-the ZIP is removed from the Space's Gradio cache after 24 hours.
+browser UI for one-person video or still-image input and an optional Mixamo
+character FBX. Without a character upload it uses an original, built-in blue
+low-poly mannequin with a Mixamo-compatible skeleton and T-pose bind pose.
+No Adobe character is bundled or downloaded. Uploaded characters take
+precedence; an invalid upload reports an error instead of silently switching
+to the mannequin. It produces a ZIP containing `mixamo_character.glb` and the available
+motion/diagnostics files. The Space uses **SAM 3D Body**, not GVHMR: no SMPL-X
+or MANO file is required. Input files and intermediate run data are temporary;
+the ZIP is eligible for Gradio cache cleanup after 24 hours.
 
 ## Licensing
 
-Use this deployment only for non-commercial research or private
-experimentation unless you have separately obtained all required commercial
-rights. The current pipeline depends on GVHMR and SMPL-X, whose upstream terms
-restrict use to non-commercial scientific research. A private Space does not
-change those terms. YOLOv8 and other upstream components also have their own
-licenses; see [`NOTICE.md`](../NOTICE.md) and each upstream license before use.
+SAM 3D Body has Meta's [custom SAM license](https://github.com/facebookresearch/sam-3d-body/blob/main/LICENSE),
+not an MIT/Apache license. Request model access and accept those terms yourself.
+Its MHR representation avoids the separate SMPL-X license. The adapter uses
+TorchVision's Faster R-CNN person detector, not YOLO; TorchVision's code license
+does not automatically settle the training-data or weight-use terms. Review
+all applicable upstream terms and rights to your source media and Mixamo
+character before commercial use. See [`NOTICE.md`](../NOTICE.md).
 
-The SMPL-X model and Mixamo characters are user-supplied licensed assets. Do
-not add them to the Space Git repository or publish them in a public dataset.
+The existing CLI/Blender GVHMR path remains available, with its original
+research-only restrictions. Switching the Space does not relicense GVHMR.
 
 ## Create the Space
 
@@ -34,26 +40,47 @@ not add them to the Space Git repository or publish them in a public dataset.
    ```
 
 3. In Space **Settings**, attach a private Hugging Face Storage Bucket and mount
-   it at `/data`. The app stores the licensed SMPL-X file and downloaded
-   inference weights there. Allow several GB for the first-run model weights.
+   it at `/data`. The app stores downloaded SAM and detector weights there.
+   Allow several GB for the model weights and sufficient space for download
+   temporaries.
    If you mount the bucket elsewhere, set the Space variable
    `M2MR_SPACE_DATA_ROOT` to that mount path.
-4. Put your licensed `SMPLX_NEUTRAL.npz` in the bucket at:
-
-   ```text
-   assets/body_models/smplx/SMPLX_NEUTRAL.npz
-   ```
-
-   The bucket is persistent across Space restarts. The app does not upload
-   videos or Mixamo files into it.
-5. In Space **Settings → Hardware**, choose a GPU for practical video
-   processing. Start with a single Nvidia L4 or A10G and adjust if needed. The
-   app selects CUDA automatically when available and falls back to CPU
-   otherwise. A CPU run can be much slower. First use downloads roughly 5 GB of
-   model weights into the bucket; later runs reuse them.
+4. Request access at
+   [facebook/sam-3d-body-dinov3](https://huggingface.co/facebook/sam-3d-body-dinov3).
+   Once approved, add **HF_TOKEN** as a Space **secret**, using a token with
+   permission to read that gated model. A token on your laptop is not
+   automatically available inside the Space. Never put it in code, Git or chat.
+5. In Space **Settings → Hardware**, choose an NVIDIA GPU. Consider a single
+   L4 or A10G as a starting point, but memory requirements depend on the
+   checkpoint and inputs and have not yet been measured for this adapter.
+   **CPU/MPS inference is not supported** by the supplied SAM estimator.
+   No paid hardware is selected automatically. First use downloads the model
+   into the bucket; later runs reuse it.
 6. Wait for the Docker build to complete, then open the Space. Upload one
-   single-person video or still image and a binary Mixamo FBX in T-pose, and
+   single-person video or still image. Optionally upload a binary Mixamo FBX
+   in T-pose; leave it empty to use the default mannequin. Then
    select **Generate GLB**. Download the result ZIP before it expires.
+
+## Motion limitations
+
+This is an experimental adapter around an image-based estimator, not a
+replacement for GVHMR's world-motion tracking:
+
+- Use a **fixed, level camera**, no cuts, one person, head to toe throughout.
+  Detection runs on every frame; missing or multiple people stop the job rather
+  than dropping frames, freezing a pose or switching identities.
+- SAM's metre-valued camera coordinates plus `pred_cam_t` are rotated to Y-up.
+  Initial pelvis X/Z are centered and the lowest initial ankle/toe is placed at
+  Y=0. Camera movement and tilt are **not** compensated.
+- Spine/collar landmarks are approximated from hip/shoulder/neck landmarks.
+  The adapter uses body-only inference; individual Mixamo fingers stay at rest.
+  `--detect-hands` is rejected for `sam3d`.
+- A 40 ms Gaussian filter reduces jitter offline. No foot-contact probabilities
+  are fabricated; GVHMR contact-based foot locking is unavailable.
+- Every decoded video frame is retained and output FPS follows source duration.
+  A still is exported as a 32-frame hold at 30 FPS.
+- Inspect the animation and `diagnostics.json` before use. If diagnostics fail,
+  the download status says the quality report is missing.
 
 ## Privacy and data retention
 
@@ -68,10 +95,33 @@ it can be downloaded. Hugging Face controls the Space infrastructure, so do not
 upload sensitive media unless its hosting and retention terms are acceptable
 for your use.
 
-## Local app smoke test
+## Local setup and validation
 
-The Space uses the repository's Dockerfile and requires an NVIDIA GPU for
-accelerated inference. For local checks, configure
-`M2MR_SPACE_DATA_ROOT` to a directory containing the SMPL-X file, build the
-Docker image, and open `http://localhost:7860`. Running without a GPU is
-possible but inference will be slower.
+Build the repository Dockerfile, then run with an NVIDIA GPU and your
+credentials supplied through the environment:
+
+```bash
+docker build -t m2mr-sam3d .
+docker run --rm --gpus all -p 7860:7860 \
+  -e HF_TOKEN -v m2mr-models:/data m2mr-sam3d
+```
+
+Open `http://localhost:7860`. The UI can start without CUDA, but generation will
+explicitly report that GPU hardware is required.
+
+The image runs the application source directly from `/app` and installs
+[`requirements-space.txt`](../requirements-space.txt), deliberately avoiding the
+default GVHMR dependency stack. SAM's source is pinned in the Dockerfile and
+exposed on `PYTHONPATH` because upstream does not supply an installable Python
+package.
+
+The same environment supports the CLI:
+
+```bash
+python -m motion2mixamorig.cli run --set-extractor sam3d --device cuda --video clip.mp4 --rig character.fbx
+python -m unittest scripts.test_sam3d scripts.test_mannequin
+```
+
+SAM checkpoint access, CUDA inference, animation quality and memory usage must
+be validated on an approved GPU deployment. Unit tests use synthetic predictions;
+they are not evidence of model quality.

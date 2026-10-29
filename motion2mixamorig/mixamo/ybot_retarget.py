@@ -165,11 +165,12 @@ def build_mapping(
     fbx_path: Path | None = None,
     *,
     verbose: bool = True,
+    target_rig: MixamoRig | None = None,
 ) -> YBotMapping:
     """Derive the Mixamo Skeleton → character-rig transfer from the calibration."""
     fbx_path = Path(fbx_path) if fbx_path is not None else calibration.fbx_path
     skel_rig = calibration.skeleton_rig
-    ybot_rig = load_full_rig(fbx_path)
+    ybot_rig = target_rig if target_rig is not None else load_full_rig(fbx_path)
 
     skel_rest_rot = rest_world_rotations(skel_rig)
     ybot_rest_rot = rest_world_rotations(ybot_rig)

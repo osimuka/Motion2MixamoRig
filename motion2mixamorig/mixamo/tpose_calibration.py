@@ -358,8 +358,20 @@ def load_calibration(fbx_path: Path, *, verbose: bool = False) -> TposeCalibrati
     fbx_path = Path(fbx_path)
     data = extract_skeleton(fbx_path)
     rig = rig_from_skeleton_data(data, fbx_path)
-    skel = hips_origin(canonical_mixamo_tpose(rig))
     rest_raw, fbx_meta = rig_rest_from_skeleton_data(data, fbx_path)
+    return calibrate_rig(rig, rest_raw, fbx_meta, verbose=verbose)
+
+
+def calibrate_rig(
+    rig: MixamoRig,
+    rest_raw: dict[str, np.ndarray],
+    fbx_meta: dict,
+    *,
+    verbose: bool = False,
+) -> TposeCalibration:
+    """Measure the same calibration for a loaded or procedurally generated rig."""
+    fbx_path = rig.source
+    skel = hips_origin(canonical_mixamo_tpose(rig))
     rest = hips_origin(rest_raw)
 
     ref_h = body_height(rest)

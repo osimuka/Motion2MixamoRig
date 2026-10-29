@@ -26,6 +26,7 @@ import gradio as gr
 
 from motion2mixamorig import checks, paths
 from motion2mixamorig.errors import classify_error
+from motion2mixamorig.extractors.sam3d import require_cuda
 from motion2mixamorig.pipeline import run_pipeline
 from motion2mixamorig.progress import ProgressWriter
 
@@ -99,35 +100,36 @@ def generate(
 ) -> tuple[str, str]:
     uploads = (video_upload, image_upload, rig_upload)
     try:
-        if not paths.SMPLX_NEUTRAL.is_file():
-            raise gr.Error(
-                "SMPL-X was not found. Attach the private Storage Bucket at "
-                f"{SPACE_DATA_ROOT} and place the model at "
-                "assets/body_models/smplx/SMPLX_NEUTRAL.npz."
-            )
-        _validate_upload(paths.SMPLX_NEUTRAL, checks.check_smplx, "SMPL-X model")
+        try:
+            require_cuda("cuda")
+        except RuntimeError as exc:
+            raise gr.Error(str(exc)) from exc
 
         with tempfile.TemporaryDirectory(prefix="m2mr-space-") as temp:
             job_dir = Path(temp)
             input_dir = job_dir / "input"
             input_dir.mkdir()
-            rig = _copy_upload(rig_upload, input_dir, {".fbx"}, "character")
-            _validate_upload(rig, checks.check_rig, "Mixamo character")
+            rig = None
+            if rig_upload:
+                rig = _copy_upload(rig_upload, input_dir, {".fbx"}, "character")
+                _validate_upload(rig, checks.check_rig, "Mixamo character")
 
             if media_type == "Video":
                 source = _copy_upload(video_upload, input_dir, VIDEO_SUFFIXES, "source")
-                _validate_upload(source, checks.check_video, "Video")
+                _validate_upload(
+                    source, lambda path: checks.check_video(path, check_people=False), "Video"
+                )
                 video, image = source, None
             elif media_type == "Still image":
                 source = _copy_upload(image_upload, input_dir, IMAGE_SUFFIXES, "source")
-                _validate_upload(source, checks.check_image, "Image")
+                _validate_upload(
+                    source, lambda path: checks.check_image(path, check_people=False), "Image"
+                )
                 video, image = None, source
             else:
                 raise gr.Error("Choose either Video or Still image.")
 
-            import torch
-
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            device = "cuda"
             run_dir = job_dir / "output"
             try:
                 run_pipeline(
@@ -135,6 +137,7 @@ def generate(
                     rig,
                     image=image,
                     device=device,
+                    extractor="sam3d",
                     verbose=False,
                     output_dir=run_dir,
                     progress=SpaceProgressWriter(progress),
@@ -149,7 +152,13 @@ def generate(
             return (
                 f"Finished on {device.upper()}. The ZIP contains the GLB and available "
                 "motion/diagnostics files. Uploaded inputs and intermediate run files "
-                "are discarded after this job.",
+                "are discarded after this job. SAM uses camera-aligned motion: "
+                "camera movement is not removed and spine joints are approximated. "
+                + (
+                    "Quality report: diagnostics.json in the ZIP."
+                    if (run_dir / "diagnostics.json").is_file()
+                    else "Quality report is missing; re-check the downloaded run with m2mr diagnose."
+                ),
                 str(archive),
             )
     finally:
@@ -169,11 +178,17 @@ with gr.Blocks(delete_cache=(86400, 86400), title="4onstudios LTD") as demo:
 # 4onstudios LTD
 ### Motion2MixamoRig improvement fork
 Generate an animated Mixamo character (`.glb`) from a single-person video or still pose.
+Character upload is optional: leave it empty to animate the built-in blue
+T-pose mannequin, or upload your own Mixamo-rigged binary FBX.
 
-**Private use only:** the current GVHMR and SMPL-X components are restricted to
-non-commercial research by their upstream terms. A private Space does not grant
-commercial-use rights. Read the upstream terms in
-[NOTICE.md](https://github.com/MaxLiu22/Motion2MixamoRig/blob/main/NOTICE.md).
+**SAM 3D Body:** no SMPL-X download is needed. The Space owner must accept
+[Meta's model terms and request access](https://huggingface.co/facebook/sam-3d-body-dinov3),
+set an `HF_TOKEN` secret with model read access, and select NVIDIA GPU hardware.
+Use is subject to the SAM license, detector-weight terms and your character/media rights.
+
+**Experimental:** use a fixed, level camera with one person visible throughout.
+This adapter smooths per-frame estimates; it does not remove camera movement,
+recover a gravity-aligned world trajectory, or animate individual fingers.
 
 Uploaded video/image and Mixamo FBX files are used for this job only. The output
 ZIP is kept in temporary Space cache for up to 24 hours; run files and uploads
@@ -185,7 +200,7 @@ are not retained in the attached Storage Bucket.
             ["Video", "Still image"], value="Video", label="Input type"
         )
         rig_upload = gr.File(
-            label="Mixamo character (binary FBX, T-pose)",
+            label="Optional character (binary Mixamo FBX, T-pose)",
             file_types=[".fbx"],
             type="filepath",
         )

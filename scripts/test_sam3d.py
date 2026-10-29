@@ -1,0 +1,178 @@
+"""Focused SAM adapter tests; run with python -m unittest scripts.test_sam3d."""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+import contextlib
+import io
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import numpy as np
+
+from motion2mixamorig.extractors import DEFAULT_EXTRACTOR, get_extractor
+from motion2mixamorig.extractors.base import SMPL_JOINT_NAMES, write_skeleton_npz
+from motion2mixamorig.extractors.sam3d import (
+    Sam3dExtractor,
+    infer_frame,
+    map_keypoints,
+    smooth_and_align,
+)
+from motion2mixamorig.human_motion import load_human_motion
+
+
+class SamMappingTests(unittest.TestCase):
+    def test_mapping_units_axes_laterality_and_camera_translation(self):
+        points = np.arange(70 * 3, dtype=float).reshape(70, 3) / 100
+        camera = np.array([1.0, 2.0, 3.0])
+        mapped = map_keypoints(points, camera)
+        converted = (points + camera) * [1, -1, -1]
+        self.assertEqual(mapped.shape, (24, 3))
+        for name, index in (
+            ("left_hip", 9), ("right_hip", 10), ("left_wrist", 62),
+            ("right_wrist", 41), ("neck", 69),
+        ):
+            np.testing.assert_allclose(mapped[SMPL_JOINT_NAMES.index(name)], converted[index])
+        np.testing.assert_allclose(mapped[0], converted[[9, 10]].mean(axis=0))
+        np.testing.assert_allclose(mapped[10], converted[[15, 16]].mean(axis=0))
+        np.testing.assert_allclose(mapped[15], converted[[3, 4]].mean(axis=0))
+        np.testing.assert_allclose(mapped[3], mapped[0] + (mapped[9] - mapped[0]) / 3)
+
+    def test_invalid_predictions_rejected(self):
+        for points, camera in (
+            (np.zeros((69, 3)), np.zeros(3)),
+            (np.full((70, 3), np.nan), np.zeros(3)),
+            (np.zeros((70, 3)), np.ones((1, 3))),
+            (np.zeros((70, 3)), np.array([0, np.inf, 0])),
+        ):
+            with self.subTest(shape=points.shape), self.assertRaises(ValueError):
+                map_keypoints(points, camera)
+
+    def test_smoothing_keeps_translation_and_shared_joint_offsets(self):
+        joints = np.ones((60, 24, 3))
+        joints[:, :, 0] = np.arange(60)[:, None] / 30
+        joints[:, 0, 1] = 2
+        result = smooth_and_align(joints, 30)
+        np.testing.assert_allclose(result[0, 0], [0, 1, 0])
+        self.assertGreater(result[-1, 0, 0], 1.8)
+        np.testing.assert_allclose(result[:, 0, 1] - result[:, 7, 1], 1)
+
+    def test_smoothing_reduces_jitter(self):
+        joints = np.zeros((60, 24, 3))
+        joints[:, :, 1] = np.arange(60)[:, None] % 2
+        result = smooth_and_align(joints, 30)
+        self.assertLess(float(np.std(np.diff(result[:, 0, 1]))), 0.1)
+
+    def test_nonfinite_or_empty_motion_rejected(self):
+        for joints, fps in (
+            (np.zeros((0, 24, 3)), 30),
+            (np.zeros((2, 24, 3)), 0),
+            (np.zeros((2, 24, 3)), np.inf),
+            (np.full((2, 24, 3), np.nan), 30),
+        ):
+            with self.assertRaises(ValueError):
+                smooth_and_align(joints, fps)
+
+    def test_npz_contract_and_60fps_duration(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = write_skeleton_npz(
+                Path(temp) / "skeleton_motion.npz", extractor="sam3d",
+                joints_3d=np.zeros((120, 24, 3)), fps=60,
+            )
+            motion = load_human_motion(path)
+            self.assertEqual(motion.joint_names, list(SMPL_JOINT_NAMES))
+            self.assertEqual(motion.n_frames / motion.fps, 2.0)
+            self.assertAlmostEqual(motion.timestamps[-1], 119 / 60)
+            self.assertIsNone(motion.foot_contact)
+
+
+class SamInferenceTests(unittest.TestCase):
+    @patch("motion2mixamorig.extractors.sam3d.person_boxes")
+    def test_missing_or_multiple_people_fail_instead_of_skipping_frames(self, boxes):
+        for count in (0, 2):
+            boxes.return_value = np.zeros((count, 4))
+            with self.assertRaisesRegex(ValueError, "frame 17"):
+                infer_frame(np.zeros((8, 8, 3), dtype=np.uint8), Mock(), Mock(), 17)
+
+    @patch("motion2mixamorig.extractors.sam3d.person_boxes")
+    def test_rgb_and_body_only_estimator_contract(self, boxes):
+        boxes.return_value = np.array([[0, 0, 8, 8]])
+        estimator = Mock()
+        estimator.process_one_image.return_value = [{
+            "pred_keypoints_3d": np.zeros((308, 3)), "pred_cam_t": np.ones(3),
+        }]
+        frame = np.full((8, 8, 3), [1, 2, 3], dtype=np.uint8)
+        result = infer_frame(frame, estimator, Mock(), 0)
+        self.assertEqual(result.shape, (24, 3))
+        args, kwargs = estimator.process_one_image.call_args
+        np.testing.assert_array_equal(args[0][0, 0], [3, 2, 1])
+        self.assertEqual(kwargs["inference_type"], "body")
+
+    def test_default_and_unsupported_finger_behavior(self):
+        self.assertEqual(DEFAULT_EXTRACTOR, "gvhmr")
+        self.assertIsInstance(get_extractor("sam3d"), Sam3dExtractor)
+        with self.assertRaisesRegex(ValueError, "finger"):
+            get_extractor("sam3d").extract(
+                Path("video.mp4"), Path("motion.npz"), work_dir=Path("."), detect_hands=True
+            )
+
+    @patch("motion2mixamorig.checks._count_people", side_effect=AssertionError("YOLO imported"))
+    def test_decode_checks_can_avoid_gvhmr_detector(self, _count):
+        import cv2
+        from motion2mixamorig import checks
+
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "image.png"
+            self.assertTrue(cv2.imwrite(str(path), np.zeros((8, 8, 3), dtype=np.uint8)))
+            self.assertIsNone(checks.check_image(path, check_people=False))
+
+    @patch("motion2mixamorig.extractors.sam3d.require_cuda")
+    @patch("motion2mixamorig.extractors.sam3d.load_estimator")
+    @patch("motion2mixamorig.extractors.sam3d.load_person_detector")
+    @patch("motion2mixamorig.extractors.sam3d.infer_frame")
+    def test_video_extract_preserves_every_frame_and_duration(self, infer, _det, _est, _cuda):
+        import cv2
+
+        infer.return_value = np.ones((24, 3))
+        with tempfile.TemporaryDirectory() as temp:
+            video = Path(temp) / "clip.avi"
+            writer = cv2.VideoWriter(str(video), cv2.VideoWriter_fourcc(*"MJPG"), 60, (32, 32))
+            self.assertTrue(writer.isOpened())
+            for _ in range(120):
+                writer.write(np.zeros((32, 32, 3), dtype=np.uint8))
+            writer.release()
+            result = Sam3dExtractor().extract(
+                video, Path(temp) / "skeleton_motion.npz", work_dir=Path(temp), device="cuda",
+                verbose=False,
+            )
+            motion = load_human_motion(result)
+            self.assertEqual(infer.call_count, 120)
+            self.assertEqual(motion.n_frames, 120)
+            self.assertAlmostEqual(motion.n_frames / motion.fps, 2, places=3)
+
+    @patch("motion2mixamorig.checks._count_people", side_effect=AssertionError("YOLO imported"))
+    @patch("motion2mixamorig.checks.check_smplx", side_effect=AssertionError("SMPL-X checked"))
+    @patch("motion2mixamorig.checks.check_rig", return_value=None)
+    @patch.object(Sam3dExtractor, "check", return_value=[])
+    def test_cli_preflight_sam_avoids_smplx_and_yolo(self, _requirements, _rig, _smpl, _people):
+        import cv2
+        from motion2mixamorig.cli import build_parser, preflight
+
+        with tempfile.TemporaryDirectory() as temp:
+            image = Path(temp) / "still.png"
+            rig = Path(temp) / "character.fbx"
+            rig.write_bytes(b"test")
+            cv2.imwrite(str(image), np.zeros((32, 32, 3), dtype=np.uint8))
+            args = build_parser().parse_args([
+                "run", "--image", str(image), "--rig", str(rig),
+                "--set-extractor", "sam3d", "--device", "cuda",
+            ])
+            with contextlib.redirect_stdout(io.StringIO()):
+                _, chosen_rig, _, chosen_image = preflight(args)
+            self.assertEqual(chosen_rig, rig)
+            self.assertEqual(chosen_image, image)
+
+
+if __name__ == "__main__":
+    unittest.main()

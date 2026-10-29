@@ -61,7 +61,7 @@ def _count_people(frame) -> int:
     return n
 
 
-def check_video(path: Path) -> str | None:
+def check_video(path: Path, *, check_people: bool = True) -> str | None:
     """Decodable, and a single person on the sampled frames — not a group."""
     import cv2
 
@@ -81,6 +81,10 @@ def check_video(path: Path) -> str | None:
                 "ffmpeg -i input -c:v libx264 output.mp4"
             )
         return "has no readable frame count — re-export the clip as a plain mp4"
+    if not check_people:
+        ok, _ = cap.read()
+        cap.release()
+        return None if ok else "could not decode the first video frame"
     k = min(_PERSON_SAMPLES, n_frames)
     sample = {int(round(i * (n_frames - 1) / max(k - 1, 1))) for i in range(k)}
     counts: list[int] = []
@@ -110,7 +114,7 @@ def check_video(path: Path) -> str | None:
     return None
 
 
-def check_image(path: Path) -> str | None:
+def check_image(path: Path, *, check_people: bool = True) -> str | None:
     """Decodable still, and exactly one person — same rule as check_video."""
     import cv2
 
@@ -119,6 +123,8 @@ def check_image(path: Path) -> str | None:
         return (
             "cannot be decoded as an image — use a jpg/png/webp still of one person"
         )
+    if not check_people:
+        return None
     n = _count_people(frame)
     if n >= 2:
         return (

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from functools import partial
 from pathlib import Path
 
 from . import checks, paths
@@ -98,6 +99,8 @@ def doctor(extractor_name: str | None = None, *, detect_hands: bool = False) -> 
     print(f"project root: {paths.PROJECT_ROOT}\n")
 
     name = extractor_name or DEFAULT_EXTRACTOR
+    check_video = partial(checks.check_video, check_people=name != "sam3d")
+    check_image = partial(checks.check_image, check_people=name != "sam3d")
     try:
         extractor = get_extractor(name)
     except ValueError as exc:
@@ -131,9 +134,9 @@ def doctor(extractor_name: str | None = None, *, detect_hands: bool = False) -> 
         SOURCE_HINT,
     )
     for video in videos:
-        ok &= _check_content(f"  - {video.name}", video, checks.check_video)
+        ok &= _check_content(f"  - {video.name}", video, check_video)
     for image in images:
-        ok &= _check_content(f"  - {image.name}", image, checks.check_image)
+        ok &= _check_content(f"  - {image.name}", image, check_image)
 
     if detect_hands:
         print()
@@ -180,6 +183,9 @@ def preflight(args: argparse.Namespace) -> tuple[Path | None, Path, Path | None,
     missing. Returns (video, rig, skeleton, image).
     """
     problems = 0
+    chosen_name = getattr(args, "set_extractor", None) or DEFAULT_EXTRACTOR
+    check_video = partial(checks.check_video, check_people=chosen_name != "sam3d")
+    check_image = partial(checks.check_image, check_people=chosen_name != "sam3d")
 
     def check(label: str, present: bool, hint: str) -> bool:
         nonlocal problems
@@ -222,17 +228,17 @@ def preflight(args: argparse.Namespace) -> tuple[Path | None, Path, Path | None,
                 False,
                 "use a still (.jpg/.png/webp/bmp), or pass a clip with --video",
             )
-        check_content(f"image is usable    {image.name if image else ''}", image, checks.check_image)
+        check_content(f"image is usable    {image.name if image else ''}", image, check_image)
     elif want_video:
         video = Path(args.video)
         if video.exists() and paths.is_image(video):
             image = video
             video = None
             print(f"{OK} input image        {image}  (detected from --video path)")
-            check_content(f"image is usable    {image.name}", image, checks.check_image)
+            check_content(f"image is usable    {image.name}", image, check_image)
         else:
             check(f"input video        {video}", video.exists(), "check the --video path")
-            check_content(f"video is usable    {video.name}", video, checks.check_video)
+            check_content(f"video is usable    {video.name}", video, check_video)
     else:
         video = paths.latest_video()
         if video is None:
@@ -244,7 +250,7 @@ def preflight(args: argparse.Namespace) -> tuple[Path | None, Path, Path | None,
                 SOURCE_HINT + ", or pass --video / --image",
             )
             check_content(
-                f"image is usable    {image.name if image else ''}", image, checks.check_image
+                f"image is usable    {image.name if image else ''}", image, check_image
             )
         else:
             check(
@@ -253,7 +259,7 @@ def preflight(args: argparse.Namespace) -> tuple[Path | None, Path, Path | None,
                 True,
                 VIDEO_HINT + ", or pass --video",
             )
-            check_content(f"video is usable    {video.name}", video, checks.check_video)
+            check_content(f"video is usable    {video.name}", video, check_video)
 
     # Rig: --rig wins, else Y_Bot.fbx, else the first .fbx in assets/mixamo/.
     if args.rig:
@@ -274,7 +280,6 @@ def preflight(args: argparse.Namespace) -> tuple[Path | None, Path, Path | None,
     # Skeleton reuse skips the body-model check. Hand detection still needs
     # either fingers already stored in that file, or the body cache beside it.
     detect_hands = bool(getattr(args, "detect_hands", False))
-    chosen_name = getattr(args, "set_extractor", None) or DEFAULT_EXTRACTOR
     try:
         chosen = get_extractor(chosen_name)
         extractor_error = ""

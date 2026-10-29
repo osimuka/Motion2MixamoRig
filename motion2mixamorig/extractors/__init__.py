@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from .base import MotionExtractor
 from .gvhmr import GvhmrExtractor
+from .sam3d import Sam3dExtractor
 
 DEFAULT_EXTRACTOR = "gvhmr"
 
 _EXTRACTORS: dict[str, MotionExtractor] = {
     GvhmrExtractor.name: GvhmrExtractor(),
+    Sam3dExtractor.name: Sam3dExtractor(),
 }
 
 

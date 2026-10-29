@@ -51,6 +51,13 @@ Agents should start with [`AGENTS.md`](AGENTS.md).
 ### ☁️ Private Hugging Face Space
 
 This repository also includes a Gradio app for a **private** Hugging Face Space.
+It uses **SAM 3D Body** with an NVIDIA GPU, without SMPL-X. Meta model-access
+approval and an `HF_TOKEN` Space secret are required. The adapter is
+experimental: use a fixed, level camera; moving-camera world recovery and
+individual finger animation are not supported. Character upload is optional:
+the Space animates an original blue T-pose mannequin when no FBX is supplied.
+The CLI and Blender still use
+GVHMR by default; their SMPL-X instructions below are unchanged.
 See the [Hugging Face deployment guide](docs/huggingface-space.md) for private
 hosting, persistent storage, hardware, and licensing setup.
 
