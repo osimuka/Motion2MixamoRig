@@ -115,6 +115,11 @@ default GVHMR dependency stack. SAM's source is pinned in the Dockerfile and
 exposed on `PYTHONPATH` because upstream does not supply an installable Python
 package.
 
+The build also imports DINOv3's Torch Hub entry points without downloading
+weights, catching dependencies such as `termcolor` that load only when the
+backbone is initialized. `PACKAGE_MISSING` errors name the missing dependency;
+they do not necessarily mean Motion2MixamoRig itself is absent.
+
 The same environment supports the CLI:
 
 ```bash

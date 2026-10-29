@@ -22,7 +22,8 @@ COPY LICENSE NOTICE.md ./
 COPY motion2mixamorig ./motion2mixamorig
 
 RUN python -m pip install -r requirements-space.txt \
-    && python -c "from sam_3d_body import SAM3DBodyEstimator, load_sam_3d_body"
+    && python -c "from sam_3d_body import SAM3DBodyEstimator, load_sam_3d_body" \
+    && python -c "import torch; assert 'dinov3_vith16plus' in torch.hub.list('facebookresearch/dinov3', trust_repo=True)"
 
 COPY app.py ./
 COPY scripts/test_sam3d.py ./scripts/test_sam3d.py

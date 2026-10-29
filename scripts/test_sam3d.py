@@ -23,6 +23,19 @@ from motion2mixamorig.human_motion import load_human_motion
 
 
 class SamMappingTests(unittest.TestCase):
+    def test_missing_dependency_error_names_actual_module(self):
+        from motion2mixamorig.errors import classify_error
+
+        missing = ModuleNotFoundError("No module named 'termcolor'", name="termcolor")
+        self.assertEqual(classify_error(missing), ("PACKAGE_MISSING", str(missing)))
+        package = ModuleNotFoundError(
+            "No module named 'motion2mixamorig'", name="motion2mixamorig"
+        )
+        self.assertEqual(
+            classify_error(package),
+            ("PACKAGE_MISSING", "Motion2MixamoRig package not installed"),
+        )
+
     def test_mapping_units_axes_laterality_and_camera_translation(self):
         points = np.arange(70 * 3, dtype=float).reshape(70, 3) / 100
         camera = np.array([1.0, 2.0, 3.0])

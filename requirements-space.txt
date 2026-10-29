@@ -4,6 +4,7 @@ opencv-python>=4.8,<4.12
 scipy
 einops
 timm
+termcolor
 scikit-image
 yacs
 omegaconf

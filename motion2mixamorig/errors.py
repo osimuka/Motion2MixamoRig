@@ -14,7 +14,9 @@ def classify_error(exc: BaseException) -> tuple[str, str]:
     name = type(exc).__name__
 
     if isinstance(exc, ModuleNotFoundError) or "no module named" in low:
-        return "PACKAGE_MISSING", "Motion2MixamoRig package not installed"
+        if isinstance(exc, ModuleNotFoundError) and exc.name == "motion2mixamorig":
+            return "PACKAGE_MISSING", "Motion2MixamoRig package not installed"
+        return "PACKAGE_MISSING", _short_message(text) or "A required Python dependency is missing"
 
     if isinstance(exc, FileNotFoundError):
         if "smplx" in low or "smpl" in low:
