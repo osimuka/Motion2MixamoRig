@@ -207,12 +207,12 @@ are not retained in the attached Storage Bucket.
     with gr.Row():
         video_upload = gr.File(
             label="Single-person video",
-            file_types=[f".{suffix}" for suffix in sorted(VIDEO_SUFFIXES)],
+            file_types=sorted(VIDEO_SUFFIXES),
             type="filepath",
         )
         image_upload = gr.File(
             label="Single-person still image",
-            file_types=[f".{suffix}" for suffix in sorted(IMAGE_SUFFIXES)],
+            file_types=sorted(IMAGE_SUFFIXES),
             type="filepath",
             visible=False,
         )

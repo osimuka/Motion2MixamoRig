@@ -88,6 +88,29 @@ class MannequinTests(unittest.TestCase):
                 self.assertEqual(data["quat_wxyz_rig"].shape[0], 3)
                 self.assertIn("wxyz", str(data["convention"]))
 
+    def test_upload_filters_accept_supported_extensions(self):
+        import app
+        from gradio.data_classes import FileData
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for component, suffixes in (
+                (app.video_upload, app.VIDEO_SUFFIXES),
+                (app.image_upload, app.IMAGE_SUFFIXES),
+            ):
+                self.assertEqual(component.file_types, sorted(suffixes))
+                for suffix in sorted(suffixes):
+                    with self.subTest(suffix=suffix):
+                        source = root / f"source{suffix}"
+                        source.write_bytes(b"upload filter test")
+                        self.assertEqual(
+                            component.preprocess(FileData(path=str(source))), str(source)
+                        )
+                unsupported = root / "source.txt"
+                unsupported.write_text("not media")
+                with self.assertRaises(app.gr.Error):
+                    component.preprocess(FileData(path=str(unsupported)))
+
     def test_space_optional_and_uploaded_character_selection(self):
         import app
 
