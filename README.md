@@ -1,4 +1,16 @@
-# Motion2MixamoRig
+---
+title: 4onstudios LTD
+emoji: 🎬
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+license: other
+---
+
+# 4onstudios LTD
+
+**An improvement fork of [Motion2MixamoRig](https://github.com/MaxLiu22/Motion2MixamoRig), maintained by 4onstudios LTD.**
 
 <p align="center">
   <a href="#prerequisites"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
@@ -35,6 +47,12 @@ Step-by-step instructions, tips, and updating: **[User Guide](docs/user-guide.md
 Clone the repository and run the pipeline yourself: start at [Prerequisites](#prerequisites).
 
 Agents should start with [`AGENTS.md`](AGENTS.md).
+
+### ☁️ Private Hugging Face Space
+
+This repository also includes a Gradio app for a **private** Hugging Face Space.
+See the [Hugging Face deployment guide](docs/huggingface-space.md) for private
+hosting, persistent storage, hardware, and licensing setup.
 
 https://github.com/user-attachments/assets/37c67642-f36c-4815-bcf3-028ed9546a2f
 
