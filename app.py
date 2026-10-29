@@ -113,6 +113,11 @@ def generate(
             if rig_upload:
                 rig = _copy_upload(rig_upload, input_dir, {".fbx"}, "character")
                 _validate_upload(rig, checks.check_rig, "Mixamo character")
+            elif os.environ.get("M2MR_DEFAULT_RIG"):
+                rig = Path(os.environ["M2MR_DEFAULT_RIG"])
+                if not rig.is_file():
+                    raise gr.Error("The configured default character is missing. Contact the Space owner.")
+                _validate_upload(rig, checks.check_rig, "Default character")
 
             if media_type == "Video":
                 source = _copy_upload(video_upload, input_dir, VIDEO_SUFFIXES, "source")
@@ -178,8 +183,9 @@ with gr.Blocks(delete_cache=(86400, 86400), title="4onstudios LTD") as demo:
 # 4onstudios LTD
 ### Motion2MixamoRig improvement fork
 Generate an animated Mixamo character (`.glb`) from a single-person video or still pose.
-Character upload is optional: leave it empty to animate the built-in blue
+Character upload is optional: leave it empty to animate the Space's default
 T-pose mannequin, or upload your own Mixamo-rigged binary FBX.
+Without an owner-configured character, the default is the built-in blue low-poly doll.
 
 **SAM 3D Body:** no SMPL-X download is needed. The Space owner must accept
 [Meta's model terms and request access](https://huggingface.co/facebook/sam-3d-body-dinov3),

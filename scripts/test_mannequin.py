@@ -22,6 +22,33 @@ from motion2mixamorig.mixamo.tpose_calibration import REQUIRED_BONES, calibrate_
 
 
 class MannequinTests(unittest.TestCase):
+    def test_glb_preserves_diffuse_samples_and_skin_weights(self):
+        from motion2mixamorig.mixamo.gltf import write_glb
+
+        with tempfile.TemporaryDirectory() as temp:
+            asset = build_mannequin(Path("mannequin.json"))
+            mesh = asset.meshes[0]
+            mesh.face_colors = np.tile([0, 0, 128], (len(mesh.faces), 1))
+            mesh.face_colors[1] = [255, 0, 0]
+            output = write_glb(
+                Path(temp) / "colored.glb", asset, [{}],
+                [asset.rig.bones["mixamorig:Hips"].rest_world[:3, 3]], 30,
+            )
+            gltf, binary = read_glb(output)
+            primitive = gltf["meshes"][0]["primitives"][0]
+            attrs = primitive["attributes"]
+            colors = _accessor(gltf, binary, attrs["COLOR_0"])
+            expected_red = ((128 / 255 + 0.055) / 1.055) ** 2.4
+            np.testing.assert_allclose(colors[:3], np.tile([expected_red, 0, 0], (3, 1)), atol=1e-6)
+            np.testing.assert_allclose(colors[3:6], np.tile([0, 0, 1], (3, 1)))
+            weights = _accessor(gltf, binary, attrs["WEIGHTS_0"])
+            np.testing.assert_allclose(weights.sum(axis=1), 1)
+            positions = _accessor(gltf, binary, attrs["POSITION"])
+            np.testing.assert_allclose(positions, mesh.vertices[mesh.faces.reshape(-1)] * .01, atol=1e-6)
+            self.assertEqual(len(colors), len(weights))
+            material = gltf["materials"][primitive["material"]]["pbrMetallicRoughness"]
+            self.assertEqual(material["baseColorFactor"], [1, 1, 1, 1])
+
     def test_tpose_rig_mesh_and_bind_weights(self):
         asset = build_mannequin(Path("mannequin.json"))
         rig = asset.rig
@@ -114,8 +141,8 @@ class MannequinTests(unittest.TestCase):
     def test_space_optional_and_uploaded_character_selection(self):
         import app
 
-        for custom in (False, True):
-            with self.subTest(custom=custom), tempfile.TemporaryDirectory() as temp:
+        for custom, configured in ((False, False), (True, False), (False, True), (True, True)):
+            with self.subTest(custom=custom, configured=configured), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
                 image, rig = root / "pose.png", root / "character.fbx"
                 image.write_bytes(b"image")
@@ -131,6 +158,7 @@ class MannequinTests(unittest.TestCase):
                     return out
 
                 with patch.object(app, "require_cuda"), \
+                     patch.dict(app.os.environ, {"M2MR_DEFAULT_RIG": str(rig) if configured else ""}), \
                      patch.object(app.checks, "check_image", return_value=None), \
                      patch.object(app.checks, "check_rig", return_value=None) as validate, \
                      patch.object(app, "run_pipeline", side_effect=pipeline), \
@@ -139,10 +167,26 @@ class MannequinTests(unittest.TestCase):
                         "Still image", None, str(image), str(rig) if custom else None,
                     )
                 self.assertEqual(len(captured), 1)
-                self.assertEqual(captured[0] is None, not custom)
-                self.assertEqual(validate.call_count, int(custom))
+                self.assertEqual(captured[0] is None, not (custom or configured))
+                if custom:
+                    self.assertEqual(captured[0].name, "character.fbx")
+                elif configured:
+                    self.assertEqual(captured[0], rig)
+                self.assertEqual(validate.call_count, int(custom or configured))
                 self.assertIn("diagnostics.json", status)
                 self.assertTrue(Path(archive).is_file())
+
+    def test_missing_configured_default_does_not_silently_fall_back(self):
+        import app
+
+        with tempfile.TemporaryDirectory() as temp:
+            missing = str(Path(temp) / "missing.fbx")
+            with patch.object(app, "require_cuda"), \
+                 patch.dict(app.os.environ, {"M2MR_DEFAULT_RIG": missing}), \
+                 patch.object(app, "run_pipeline") as pipeline:
+                with self.assertRaisesRegex(app.gr.Error, "default character is missing"):
+                    app.generate("Video", None, None, None)
+            pipeline.assert_not_called()
 
     def test_invalid_uploaded_character_does_not_fall_back_to_mannequin(self):
         import app

@@ -20,6 +20,7 @@ WORKDIR /app
 COPY requirements-space.txt ./
 COPY LICENSE NOTICE.md ./
 COPY motion2mixamorig ./motion2mixamorig
+COPY private_assets ./private_assets
 
 RUN python -m pip install -r requirements-space.txt \
     && python -c "from sam_3d_body import SAM3DBodyEstimator, load_sam_3d_body" \

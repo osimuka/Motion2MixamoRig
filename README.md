@@ -30,7 +30,7 @@ For game developers: give it a **single-person** action video (or a still) and a
 
 > Motion2MixamoRig is currently experimental. Version 0.1.8 is the command-line pipeline. This repository also includes a Blender 4.2+ Extension that runs that same pipeline in an external Python environment. Building the add-on from source: [`blender_extension/README.md`](blender_extension/README.md).
 
-## Two ways to use it
+## Ways to use it
 
 ### 🎨 In Blender — no coding
 
@@ -55,7 +55,15 @@ It uses **SAM 3D Body** with an NVIDIA GPU, without SMPL-X. Meta model-access
 approval and an `HF_TOKEN` Space secret are required. The adapter is
 experimental: use a fixed, level camera; moving-camera world recovery and
 individual finger animation are not supported. Character upload is optional:
-the Space animates an original blue T-pose mannequin when no FBX is supplied.
+the Space animates its **Default Mannequin** when no FBX is supplied. Owners can
+use the included [Default Mannequin](private_assets/default_mannequin.fbx) by
+setting `M2MR_DEFAULT_RIG=/app/private_assets/default_mannequin.fbx`, or configure
+another character. Without that setting, an original blue low-poly T-pose doll
+is used. The included model is supplied by the fork owner; inclusion does not
+relicense it under the project's code license.
+Video generation on the private Space with an NVIDIA L4 was confirmed working
+by the operator on 2026-10-29. Upload a short single-person clip, leave the
+character empty for the mannequin, select **Generate GLB**, and download the ZIP.
 The CLI and Blender still use
 GVHMR by default; their SMPL-X instructions below are unchanged.
 See the [Hugging Face deployment guide](docs/huggingface-space.md) for private

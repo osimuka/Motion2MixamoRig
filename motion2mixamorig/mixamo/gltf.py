@@ -151,6 +151,20 @@ def write_glb(
         joints, weights = _top4_weights(mesh.weights)
         normals = _vertex_normals(verts.astype(np.float64), mesh.faces)
         color = np.clip(np.asarray(mesh.color, dtype=np.float64).reshape(3), 0, 1)
+        vertex_colors = None
+        if mesh.face_colors is not None:
+            samples = np.asarray(mesh.face_colors, dtype=np.float64)
+            if samples.shape != (len(mesh.faces), 3) or not np.isfinite(samples).all():
+                raise ValueError(f"Invalid diffuse face colors for mesh {mesh.name}")
+            corners = faces.reshape(-1)
+            verts, normals = verts[corners], normals[corners]
+            joints, weights = joints[corners], weights[corners]
+            faces = np.arange(len(corners), dtype=np.uint32).reshape(-1, 3)
+            # FBX samples are BGR/sRGB; glTF vertex colors are linear RGB.
+            srgb = np.clip(samples[:, ::-1] / 255.0, 0, 1)
+            linear = np.where(srgb <= 0.04045, srgb / 12.92, ((srgb + 0.055) / 1.055) ** 2.4)
+            vertex_colors = np.repeat(linear, 3, axis=0).astype(np.float32)
+            color = np.ones(3)
         materials.append({
             "name": mesh.name,
             "pbrMetallicRoughness": {
@@ -169,6 +183,8 @@ def write_glb(
             "indices": accessor(faces.reshape(-1), "SCALAR", 5125, target=34963),
             "material": len(materials) - 1,
         }
+        if vertex_colors is not None:
+            primitive["attributes"]["COLOR_0"] = accessor(vertex_colors, "VEC3", 5126, target=34962)
         meshes.append({"name": mesh.name or f"character_mesh_{mesh_i}", "primitives": [primitive]})
 
         ibm = np.stack(

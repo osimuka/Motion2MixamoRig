@@ -7,6 +7,11 @@ assets/**
 !assets/README.md
 !assets/**/.gitkeep
 
+# Include the owner's default mannequin, but ignore other local assets.
+private_assets/**
+!private_assets/.gitkeep
+!private_assets/default_mannequin.fbx
+
 # ── Auto-downloaded inference weights (GVHMR / 2D pose, etc.) ─
 weights/**
 !weights/.gitkeep
