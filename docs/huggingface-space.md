@@ -132,7 +132,8 @@ deployment. The uploader itself still accepts only binary FBX, not GLB.
    takes longer than subsequent runs; keep the page open until it finishes.
 5. Download and extract the output ZIP:
    - `mixamo_character.glb`: skinned character and animation; import through
-     Blender's **File → Import → glTF 2.0**.
+     Blender's **File → Import → glTF 2.0**, or copy it into a Godot 4 project.
+     See the [Godot guide](godot.md) for playback and vertex-color materials.
    - `mixamo_rotations.npz`: per-bone quaternion rotations, wxyz convention.
    - `skeleton_motion.npz`: extracted 24-joint motion and timing.
    - `diagnostics.json`: automatic self-intersection quality report, when

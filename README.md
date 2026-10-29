@@ -61,6 +61,9 @@ setting `M2MR_DEFAULT_RIG=/app/private_assets/default_mannequin.fbx`, or configu
 another character. Without that setting, an original blue low-poly T-pose doll
 is used. The included model is supplied by the fork owner; inclusion does not
 relicense it under the project's code license.
+The exported GLB also imports into **Godot 4** with a skinned skeleton and
+`mixamo_clip` animation. See the [Godot import guide](docs/godot.md), including
+the optional color-material import helper.
 Video generation on the private Space with an NVIDIA L4 was confirmed working
 by the operator on 2026-10-29. Upload a short single-person clip, leave the
 character empty for the mannequin, select **Generate GLB**, and download the ZIP.
