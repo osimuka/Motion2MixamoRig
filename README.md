@@ -53,8 +53,9 @@ Agents should start with [`AGENTS.md`](AGENTS.md).
 This repository also includes a Gradio app for a **private** Hugging Face Space.
 It uses **SAM 3D Body** with an NVIDIA GPU, without SMPL-X. Meta model-access
 approval and an `HF_TOKEN` Space secret are required. The adapter is
-experimental: use a fixed, level camera; moving-camera world recovery and
-individual finger animation are not supported. Character upload is optional:
+experimental: use a fixed, level camera; moving-camera world recovery is not
+supported. Optional **Animate fingers** uses SAM's native hand decoder, without
+HaMeR or MANO. Character upload is optional:
 the Space animates its **Default Mannequin** when no FBX is supplied. Owners can
 use the included [Default Mannequin](private_assets/default_mannequin.fbx) by
 setting `M2MR_DEFAULT_RIG=/app/private_assets/default_mannequin.fbx`, or configure
@@ -203,6 +204,25 @@ m2mr diagnose outputs/<run> --threshold-cm 2 # report only penetrations deeper t
 Each issue in `diagnostics.json` is a pair of body parts with the frame ranges where they intersect, the worst frame, and its depth. Frame numbers count from 0, as the Blender timeline does after a glTF import. Parts joined at a joint (upper arm and forearm, torso and thigh, …) are not compared: their skins overlap around the joint in any pose. `diagnostics.html` embeds the source video (needs `ffmpeg`) and loads three.js from a CDN, so its 3D view needs an internet connection. That view keeps fixed floor markers on y = 0 — a cross every 0.5 m, a larger one each metre, and a green cross at the origin — so you can judge whether the character is moving. The amber lane above the intersection tracks is for notes made by eye (drag a range, or In / Out). The Notes list on the right shows them; click a row to jump to it. **Download notes** saves those notes and the intersection list together. The file is named after the source video and records that video's path.
 
 ### 7. Fingers (`--detect-hands`)
+
+**SAM Space:** enable **Animate fingers (native SAM, experimental)** and adjust
+finger smoothing (default 0.08 seconds). The included Default Mannequin has the
+30 required finger bones. Native SAM hands need no MANO file or HaMeR weights.
+In the SAM runtime, the equivalent CLI command is:
+
+```bash
+python -m motion2mixamorig.cli run --set-extractor sam3d --device cuda \
+  --video clip.mp4 --rig character.fbx --detect-hands --hand-smooth 0.08
+```
+
+SAM full inference saves 21 landmarks per hand in `sam_hand_keypoints` inside
+`skeleton_motion.npz`. The retargeter estimates palm-relative finger curl and
+splay, not axial twist, and writes finger rotations to the GLB and rotation NPZ.
+Keep hands clearly visible: geometric validity is not visibility confidence,
+and occlusions may produce plausible but wrong poses. Body-only mode remains
+the default. See the [Space hand guide](docs/huggingface-space.md#native-sam-fingers).
+
+**Default GVHMR/HaMeR workflow (unchanged):**
 
 A plain `m2mr run` moves the body and leaves the Mixamo finger bones at rest. `--detect-hands` turns on the hand model that travels with the body extractor. With the default extractor, GVHMR, that model is [HaMeR](https://github.com/geopavlakos/hamer). HaMeR crops the wrists from the person and the frames GVHMR already chose. It does not search the clip for a second person.
 

@@ -110,7 +110,10 @@ def skeleton_from_still(path: Path) -> bool:
 
 def skeleton_has_hands(path: Path) -> bool:
     with np.load(path, allow_pickle=True) as data:
-        return "hand_pose" in data.files and "hand_valid" in data.files
+        return (
+            "sam_hand_keypoints" in data.files
+            or ("hand_pose" in data.files and "hand_valid" in data.files)
+        )
 
 
 def read_hands_name(path: Path) -> str | None:

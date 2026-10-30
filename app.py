@@ -96,6 +96,8 @@ def generate(
     video_upload: str | None,
     image_upload: str | None,
     rig_upload: str | None,
+    detect_hands: bool = False,
+    hand_smooth_s: float = 0.08,
     progress: gr.Progress = gr.Progress(),
 ) -> tuple[str, str]:
     uploads = (video_upload, image_upload, rig_upload)
@@ -143,6 +145,8 @@ def generate(
                     image=image,
                     device=device,
                     extractor="sam3d",
+                    detect_hands=detect_hands,
+                    hand_smooth_s=hand_smooth_s,
                     verbose=False,
                     output_dir=run_dir,
                     progress=SpaceProgressWriter(progress),
@@ -194,7 +198,10 @@ Use is subject to the SAM license, detector-weight terms and your character/medi
 
 **Experimental:** use a fixed, level camera with one person visible throughout.
 This adapter smooths per-frame estimates; it does not remove camera movement,
-recover a gravity-aligned world trajectory, or animate individual fingers.
+or recover a gravity-aligned world trajectory. Optional native SAM finger animation
+estimates curl and splay, not axial twist. It needs clearly visible hands and a
+character with all 30 Mixamo finger bones (the Default Mannequin has them).
+Occluded hands may still be guessed incorrectly; full inference is slower.
 
 Uploaded video/image and Mixamo FBX files are used for this job only. The output
 ZIP is kept in temporary Space cache for up to 24 hours; run files and uploads
@@ -231,12 +238,17 @@ are not retained in the attached Storage Bucket.
         outputs=[video_upload, image_upload],
         api_name=False,
     )
+    detect_hands = gr.Checkbox(label="Animate fingers (native SAM, experimental)", value=False)
+    hand_smooth = gr.Slider(
+        minimum=0, maximum=0.3, value=0.08, step=0.01,
+        label="Finger smoothing (seconds)",
+    )
     run_button = gr.Button("Generate GLB", variant="primary")
     status = gr.Textbox(label="Status", interactive=False)
     result = gr.File(label="Download output bundle", interactive=False)
     run_button.click(
         generate,
-        inputs=[media_type, video_upload, image_upload, rig_upload],
+        inputs=[media_type, video_upload, image_upload, rig_upload, detect_hands, hand_smooth],
         outputs=[status, result],
         concurrency_limit=1,
         api_name=False,

@@ -27,7 +27,7 @@ CAMERA_CONVENTION = (
     "SAM camera metres transformed by diag(1,-1,-1) to Y-up; initial pelvis XZ "
     "at origin, initial lowest ankle/toe at Y=0. Fixed level camera assumed. "
     "No camera-motion compensation or gravity recovery. Spine/collars approximated "
-    "from landmarks; fingers not animated."
+    "from landmarks; optional native hands use palm-relative landmark directions."
 )
 
 
@@ -154,7 +154,10 @@ def person_boxes(frame: np.ndarray, detector, device: str) -> np.ndarray:
     return boxes[keep].astype(np.float32)
 
 
-def infer_frame(frame: np.ndarray, estimator: BodyEstimator, detector, index: int) -> np.ndarray:
+def infer_frame(
+    frame: np.ndarray, estimator: BodyEstimator, detector, index: int,
+    *, hand_frames: list[np.ndarray] | None = None,
+) -> np.ndarray:
     import cv2
 
     boxes = person_boxes(frame, detector, "cuda")
@@ -164,16 +167,28 @@ def infer_frame(frame: np.ndarray, estimator: BodyEstimator, detector, index: in
             "visible person is required in every frame. Trim or replace the clip."
         )
     predictions = estimator.process_one_image(
-        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), bboxes=boxes, inference_type="body"
+        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), bboxes=boxes,
+        inference_type="full" if hand_frames is not None else "body",
     )
     if len(predictions) != 1:
         raise ValueError(f"SAM frame {index}: expected one pose, got {len(predictions)}")
     prediction = predictions[0]
-    return map_keypoints(prediction["pred_keypoints_3d"], prediction["pred_cam_t"])
+    mapped = map_keypoints(prediction["pred_keypoints_3d"], prediction["pred_cam_t"])
+    if hand_frames is not None:
+        # MHR70 lists each finger tip-to-base, right hand first; save wrist-first.
+        points = np.asarray(prediction["pred_keypoints_3d"], dtype=np.float64)[:70]
+        indices = [
+            [wrist] + [base + finger * 4 + joint for finger in range(5) for joint in (3, 2, 1, 0)]
+            for wrist, base in ((62, 42), (41, 21))
+        ]
+        hand_frames.append((points[indices] * [1, -1, -1]).astype(np.float32))
+    return mapped
 
 
 class Sam3dExtractor:
     name = "sam3d"
+    hand_model = "sam3d_native"
+    hand_weights_note = "Native SAM hand decoder uses the same checkpoint; no MANO or HaMeR required."
     weights_note = (
         f"SAM 3D Body downloads from {MODEL_ID} into weights/sam3d/ on first use; "
         "Meta approval, HF_TOKEN and an NVIDIA GPU are required. No SMPL-X needed."
@@ -211,20 +226,21 @@ class Sam3dExtractor:
     ) -> Path:
         import cv2
 
-        if detect_hands:
-            raise ValueError("sam3d does not yet support Mixamo finger animation; omit --detect-hands")
         require_cuda(device)
         estimator = load_estimator()
         detector = load_person_detector(device)
         source = Path(source)
         is_still = paths.is_image(source)
         frames: list[np.ndarray] = []
+        hand_frames: list[np.ndarray] | None = [] if detect_hands else None
         if is_still:
             image = cv2.imread(str(source))
             if image is None:
                 raise ValueError(f"Cannot decode still image: {source}")
-            pose = infer_frame(image, estimator, detector, 0)
+            pose = infer_frame(image, estimator, detector, 0, hand_frames=hand_frames)
             frames = [pose] * 32
+            if hand_frames is not None:
+                hand_frames *= 32
             fps = 30.0
         else:
             capture = cv2.VideoCapture(str(source))
@@ -239,7 +255,9 @@ class Sam3dExtractor:
                     ok, image = capture.read()
                     if not ok:
                         break
-                    frames.append(infer_frame(image, estimator, detector, len(frames)))
+                    frames.append(infer_frame(
+                        image, estimator, detector, len(frames), hand_frames=hand_frames,
+                    ))
                     if verbose and len(frames) % 30 == 0:
                         print(f"SAM 3D Body: {len(frames)}/{expected} frames", flush=True)
                 if not frames or abs(len(frames) - expected) > 1:
@@ -250,6 +268,19 @@ class Sam3dExtractor:
             finally:
                 capture.release()
         joints = smooth_and_align(np.stack(frames), fps)
+        hand_arrays = {}
+        if hand_frames is not None:
+            if len(hand_frames) != len(joints):
+                raise ValueError("SAM hand and body frame counts do not match")
+            hand_arrays = {
+                "sam_hand_keypoints": np.stack(hand_frames),
+                "hands": np.array(self.hand_model),
+                "sam_hand_convention": np.array(
+                    "Y-up metres; (frames, left/right, 21, xyz); wrist, then "
+                    "thumb/index/middle/ring/pinky base-to-tip. Camera translation omitted; "
+                    "only palm-relative directions are used. No visibility confidence."
+                ),
+            }
         return write_skeleton_npz(
             output_npz,
             extractor=self.name,
@@ -262,4 +293,5 @@ class Sam3dExtractor:
             coordinate_convention=np.array(CAMERA_CONVENTION),
             model_id=np.array(MODEL_ID),
             model_revision=np.array(MODEL_REVISION),
+            **hand_arrays,
         )

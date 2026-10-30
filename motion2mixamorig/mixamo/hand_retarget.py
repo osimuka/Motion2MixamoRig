@@ -118,7 +118,7 @@ def build_hand_mapping(rig: MixamoRig, mano_template_joints: np.ndarray, *, verb
 class HandMotion:
     pose: np.ndarray  # (F, 2, 15, 3, 3)
     valid: np.ndarray  # (F, 2)
-    template_joints: np.ndarray  # (16, 3) MANO right-hand rest joints
+    template_joints: np.ndarray | None  # MANO rest joints; None for native rig-local rotations
     fps: float
     smoothed_s: float
 

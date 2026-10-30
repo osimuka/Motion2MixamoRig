@@ -150,6 +150,8 @@ class MannequinTests(unittest.TestCase):
                 captured = []
 
                 def pipeline(video, chosen_rig, **kwargs):
+                    self.assertEqual(kwargs["detect_hands"], custom)
+                    self.assertEqual(kwargs["hand_smooth_s"], 0.12)
                     captured.append(chosen_rig)
                     out = kwargs["output_dir"]
                     out.mkdir()
@@ -165,6 +167,7 @@ class MannequinTests(unittest.TestCase):
                      patch.object(app, "GRADIO_TEMP_DIR", root / "cache"):
                     status, archive = app.generate(
                         "Still image", None, str(image), str(rig) if custom else None,
+                        detect_hands=custom, hand_smooth_s=0.12,
                     )
                 self.assertEqual(len(captured), 1)
                 self.assertEqual(captured[0] is None, not (custom or configured))
@@ -201,6 +204,137 @@ class MannequinTests(unittest.TestCase):
                 with self.assertRaisesRegex(app.gr.Error, "invalid FBX"):
                     app.generate("Video", None, None, str(rig))
             pipeline.assert_not_called()
+
+
+class NativeSamHandTests(unittest.TestCase):
+    def setUp(self):
+        from motion2mixamorig.mixamo.skinned_mesh import load_character_asset
+
+        self.rig_path = Path(__file__).resolve().parents[1] / "private_assets/default_mannequin.fbx"
+        self.asset = load_character_asset(self.rig_path, textures=False)
+        self.world = forward_kinematics(self.asset.rig, {})
+        self.points = np.zeros((2, 21, 3))
+        for side_index, side in enumerate(("Left", "Right")):
+            self.points[side_index, 0] = self.world[f"mixamorig:{side}Hand"][:3, 3]
+            for finger_index, finger in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky")):
+                base = 1 + finger_index * 4
+                for joint in range(3):
+                    self.points[side_index, base + joint] = self.world[
+                        f"mixamorig:{side}Hand{finger}{joint + 1}"
+                    ][:3, 3]
+                self.points[side_index, base + 3] = (
+                    2 * self.points[side_index, base + 2] - self.points[side_index, base + 1]
+                )
+
+    def write_motion(self, root, hand_points):
+        rest = world_positions_m(self.asset.rig, self.world)
+        human = np.stack([rest[HUMAN_TO_MIXAMO[name]] * [-1, 1, -1] for name in SMPL_JOINT_NAMES])
+        return write_skeleton_npz(
+            root / "skeleton.npz", extractor="sam3d", fps=30,
+            joints_3d=np.repeat(human[None], len(hand_points), axis=0),
+            sam_hand_keypoints=hand_points, hands=np.array("sam3d_native"),
+        )
+
+    def bent(self):
+        from scipy.spatial.transform import Rotation
+
+        points = self.points.copy()
+        for side in range(2):
+            normal = np.cross(points[side, 9] - points[side, 0], points[side, 5] - points[side, 17])
+            normal /= np.linalg.norm(normal)
+            rotation = Rotation.from_rotvec(normal * .7).as_matrix()
+            pivot = points[side, 6].copy()
+            points[side, 7:9] = (points[side, 7:9] - pivot) @ rotation.T + pivot
+        return points
+
+    def test_neutral_bent_and_camera_invariant_rotations(self):
+        from scipy.spatial.transform import Rotation
+        from motion2mixamorig.mixamo.sam_hand_retarget import load_sam_hands
+
+        points = np.stack([self.points, self.bent()])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            hands, mapping = load_sam_hands(self.write_motion(root, points), self.asset.rig, smooth_s=0)
+            self.assertEqual(len(mapping.bones), 30)
+            for rotation in mapping.finger_rotations(hands.pose[0], hands.valid[0]).values():
+                np.testing.assert_allclose(rotation, np.eye(3), atol=1e-6)
+            for side in ("Left", "Right"):
+                rotation = mapping.finger_rotations(hands.pose[1], hands.valid[1])[
+                    f"mixamorig:{side}HandIndex2"
+                ]
+                self.assertFalse(np.allclose(rotation, np.eye(3)))
+                np.testing.assert_allclose(rotation.T @ rotation, np.eye(3), atol=1e-6)
+                self.assertAlmostEqual(np.linalg.det(rotation), 1)
+            camera = Rotation.from_euler("xyz", [.4, .2, -.8]).as_matrix()
+            transformed = points @ camera.T + [4, 5, 6]
+            changed, _ = load_sam_hands(self.write_motion(root, transformed), self.asset.rig, smooth_s=0)
+            np.testing.assert_allclose(changed.pose, hands.pose, atol=1e-6)
+
+    def test_invalid_hands_and_rigs_report_errors(self):
+        from motion2mixamorig.mixamo.sam_hand_retarget import load_sam_hands
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            output = self.write_motion(root, np.zeros((1, 2, 21, 3)))
+            with self.assertRaisesRegex(ValueError, "no geometrically usable"):
+                load_sam_hands(output, self.asset.rig)
+            output = self.write_motion(root, self.points[None])
+            with self.assertRaisesRegex(ValueError, "finger bones"):
+                load_sam_hands(output, build_mannequin(root / "rig.json").rig)
+            with self.assertRaisesRegex(ValueError, "smoothing"):
+                load_sam_hands(output, self.asset.rig, smooth_s=-1)
+            malformed = np.full((1, 2, 21, 3), np.nan)
+            with self.assertRaisesRegex(ValueError, "finite"):
+                load_sam_hands(self.write_motion(root, malformed), self.asset.rig)
+
+    def test_body_only_sam_reuse_cannot_silently_run_hamer(self):
+        from motion2mixamorig.pipeline import run_pipeline
+        from motion2mixamorig.cli import build_parser, preflight
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skeleton = write_skeleton_npz(
+                root / "body.npz", extractor="sam3d", fps=30,
+                joints_3d=np.zeros((1, 24, 3)),
+            )
+            with contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaisesRegex(ValueError, "no saved native hands"):
+                    run_pipeline(
+                        None, self.rig_path, image=root / "pose.png", skeleton_npz=skeleton,
+                        output_dir=root / "output", no_preview=True, verbose=False, detect_hands=True,
+                    )
+                args = build_parser().parse_args([
+                    "run", "--skeleton", str(skeleton), "--rig", str(self.rig_path),
+                    "--set-extractor", "sam3d", "--detect-hands",
+                ])
+                with self.assertRaises(SystemExit):
+                    preflight(args)
+
+    def test_native_fingers_reach_npz_and_glb_with_skeleton_reuse(self):
+        from motion2mixamorig.pipeline import run_pipeline
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skeleton = self.write_motion(root, np.stack([self.points, self.bent(), self.points]))
+            with contextlib.redirect_stdout(io.StringIO()):
+                output = run_pipeline(
+                    None, self.rig_path, image=root / "pose.png", skeleton_npz=skeleton,
+                    output_dir=root / "output", no_preview=True, verbose=False,
+                    detect_hands=True, hand_smooth_s=0,
+                )
+            with np.load(output / "mixamo_rotations.npz") as data:
+                names = list(data["bone_names"])
+                for side in ("Left", "Right"):
+                    bone = names.index(f"mixamorig:{side}HandIndex2")
+                    self.assertFalse(np.allclose(data["quat_wxyz_rig"][0, bone], data["quat_wxyz_rig"][1, bone]))
+            gltf, binary = read_glb(output / "mixamo_character.glb")
+            for side in ("Left", "Right"):
+                node = next(i for i, n in enumerate(gltf["nodes"]) if n["name"] == f"mixamorig:{side}HandIndex2")
+                animation = gltf["animations"][0]
+                channel = next(c for c in animation["channels"] if c["target"] == {"node": node, "path": "rotation"})
+                track = _accessor(gltf, binary, animation["samplers"][channel["sampler"]]["output"])
+                self.assertFalse(np.allclose(track[0], track[1]))
+            self.assertTrue((output / "diagnostics.json").is_file())
 
 
 if __name__ == "__main__":

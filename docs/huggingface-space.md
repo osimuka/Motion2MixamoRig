@@ -153,6 +153,43 @@ Configure an inactivity sleep timeout (the verified deployment uses one hour),
 and pause the Space manually when finished if you want to stop compute sooner.
 Waking a sleeping Space can take time; confirm it is running before retrying.
 
+### Native SAM fingers
+
+Enable **Animate fingers (native SAM, experimental)** before generating.
+It is off by default to preserve body-only behavior and processing cost.
+**Finger smoothing** controls the rotation smoothing window in seconds
+(default 0.08; zero disables smoothing).
+
+- Uses SAM's native `full` inference with body and hand decoders and the same
+  approved checkpoint. No HaMeR, MANO, SMPL-X, or new hand-model download.
+- Needs a character with all 30 Mixamo finger bones. The included Default
+  Mannequin supports this; the procedural low-poly fallback has no fingers
+  and produces an explicit error if native fingers are requested.
+- Saves `(frames, 2, 21, 3)` Y-up hand landmarks in the skeleton NPZ under
+  `sam_hand_keypoints` (left, then right; wrist, then thumb/index/middle/ring/
+  pinky, each base-to-tip). Still-image landmarks repeat with the 32-frame hold.
+- Maps palm-relative segment directions into rig-relative finger rotations.
+  This estimates curl and splay, not axial twist or independent wrist twist.
+  Degenerate hand geometry is flagged in logs; short gaps can be smoothed,
+  while unfilled gaps remain at rest. No usable hands is a generation error.
+- The landmark output has no visibility confidence. Occluded or tiny hands
+  may still produce incorrect poses. Use close, sharp footage and inspect
+  the animation. Full inference is slower; GPU memory/speed are not benchmarked.
+- Reusing a skeleton containing these landmarks also reuses its fingers
+  without inference. A body-only SAM skeleton cannot acquire fingers from the
+  GVHMR cache: regenerate the source with native hands enabled instead.
+
+The CLI equivalent inside the SAM runtime is:
+
+```bash
+python -m motion2mixamorig.cli run --set-extractor sam3d --device cuda \
+  --video clip.mp4 --rig character.fbx --detect-hands --hand-smooth 0.08
+```
+
+Synthetic tests cover landmark ordering, left/right chains, camera-rotation
+invariance, rotation/GLB export and skeleton reuse. Real native-hand inference
+and visual finger quality still need validation on the GPU Space.
+
 ### Troubleshooting
 
 | Symptom | Action |
@@ -176,8 +213,8 @@ replacement for GVHMR's world-motion tracking:
   Initial pelvis X/Z are centered and the lowest initial ankle/toe is placed at
   Y=0. Camera movement and tilt are **not** compensated.
 - Spine/collar landmarks are approximated from hip/shoulder/neck landmarks.
-  The adapter uses body-only inference; individual Mixamo fingers stay at rest.
-  `--detect-hands` is rejected for `sam3d`.
+  Body-only inference leaves individual Mixamo fingers at rest unless native
+  hands are enabled; see [Native SAM fingers](#native-sam-fingers).
 - A 40 ms Gaussian filter reduces jitter offline. No foot-contact probabilities
   are fabricated; GVHMR contact-based foot locking is unavailable.
 - Every decoded video frame is retained and output FPS follows source duration.
@@ -231,7 +268,8 @@ python -m motion2mixamorig.cli run --set-extractor sam3d --device cuda --video c
 python -m unittest scripts.test_sam3d scripts.test_mannequin
 ```
 
-The Docker build passed 20 regression tests and the DINOv3 Hub import check.
+The Docker build runs the SAM and mannequin regression suites and the DINOv3
+Hub import check, including synthetic native-hand tests.
 Unit tests use synthetic predictions; they are not evidence of model quality.
 The operator separately confirmed successful generation on the approved L4
 deployment. Animation quality, peak memory usage, and processing speed still

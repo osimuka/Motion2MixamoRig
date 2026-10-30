@@ -20,6 +20,7 @@ from pathlib import Path
 
 from . import checks, paths
 from .extractors import DEFAULT_EXTRACTOR, extractor_names, get_extractor
+from .extractors.base import read_extractor_name
 from .progress import ProgressWriter
 from .run_report import write_failed_report
 
@@ -300,6 +301,12 @@ def preflight(args: argparse.Namespace) -> tuple[Path | None, Path, Path | None,
 
             if skeleton_has_hands(skeleton):
                 check("hand motion         already in the skeleton file", True, "")
+            elif read_extractor_name(skeleton) == "sam3d":
+                check(
+                    "SAM native hands    absent from the skeleton",
+                    False,
+                    "re-run the source with --set-extractor sam3d --detect-hands, without --skeleton",
+                )
             else:
                 if chosen is None:
                     check("motion extractor   --set-extractor", False, extractor_error)
@@ -512,7 +519,8 @@ def _add_detect_hands_arg(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help=(
             "turn on the hand detection bundled with the selected body extractor "
-            "(GVHMR uses HaMeR). Needs assets/body_models/mano/MANO_RIGHT.pkl. Off by default"
+            "(SAM uses native hands; GVHMR uses HaMeR and needs "
+            "assets/body_models/mano/MANO_RIGHT.pkl). Off by default"
         ),
     )
 

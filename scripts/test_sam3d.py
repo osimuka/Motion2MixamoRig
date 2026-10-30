@@ -122,13 +122,60 @@ class SamInferenceTests(unittest.TestCase):
         np.testing.assert_array_equal(args[0][0, 0], [3, 2, 1])
         self.assertEqual(kwargs["inference_type"], "body")
 
-    def test_default_and_unsupported_finger_behavior(self):
+    def test_default_and_native_finger_backend(self):
         self.assertEqual(DEFAULT_EXTRACTOR, "gvhmr")
         self.assertIsInstance(get_extractor("sam3d"), Sam3dExtractor)
-        with self.assertRaisesRegex(ValueError, "finger"):
-            get_extractor("sam3d").extract(
-                Path("video.mp4"), Path("motion.npz"), work_dir=Path("."), detect_hands=True
+        self.assertEqual(get_extractor("sam3d").hand_model, "sam3d_native")
+
+    @patch("motion2mixamorig.extractors.sam3d.person_boxes")
+    def test_native_full_inference_and_left_right_finger_order(self, boxes):
+        boxes.return_value = np.array([[0, 0, 8, 8]])
+        points = np.arange(70 * 3, dtype=float).reshape(70, 3) / 100
+        estimator = Mock()
+        estimator.process_one_image.return_value = [{
+            "pred_keypoints_3d": points, "pred_cam_t": np.ones(3),
+        }]
+        hands = []
+        infer_frame(np.zeros((8, 8, 3), dtype=np.uint8), estimator, Mock(), 0, hand_frames=hands)
+        self.assertEqual(estimator.process_one_image.call_args.kwargs["inference_type"], "full")
+        self.assertEqual(np.stack(hands).shape, (1, 2, 21, 3))
+        for side, wrist, base in ((0, 62, 42), (1, 41, 21)):
+            np.testing.assert_allclose(hands[0][side, 0], points[wrist] * [1, -1, -1])
+            for finger in range(5):
+                for joint in range(4):
+                    np.testing.assert_allclose(
+                        hands[0][side, 1 + finger * 4 + joint],
+                        points[base + finger * 4 + 3 - joint] * [1, -1, -1],
+                        atol=1e-6,
+                    )
+
+    @patch("motion2mixamorig.extractors.sam3d.require_cuda")
+    @patch("motion2mixamorig.extractors.sam3d.load_estimator")
+    @patch("motion2mixamorig.extractors.sam3d.load_person_detector")
+    @patch("motion2mixamorig.extractors.sam3d.person_boxes")
+    def test_native_still_hand_arrays_repeat_with_body(self, boxes, _det, estimator, _cuda):
+        import cv2
+        from motion2mixamorig.extractors.hamer import skeleton_has_hands
+
+        boxes.return_value = np.array([[0, 0, 8, 8]])
+        estimator.return_value.process_one_image.return_value = [{
+            "pred_keypoints_3d": np.arange(70 * 3, dtype=float).reshape(70, 3) / 100,
+            "pred_cam_t": np.ones(3),
+        }]
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            image = root / "pose.png"
+            cv2.imwrite(str(image), np.zeros((8, 8, 3), dtype=np.uint8))
+            output = Sam3dExtractor().extract(
+                image, root / "skeleton.npz", work_dir=root, device="cuda", detect_hands=True,
             )
+            self.assertTrue(skeleton_has_hands(output))
+            with np.load(output) as data:
+                hands = data["sam_hand_keypoints"]
+                self.assertEqual(hands.shape, (32, 2, 21, 3))
+                np.testing.assert_array_equal(hands[0], hands[-1])
+                self.assertEqual(str(data["hands"]), "sam3d_native")
+                self.assertNotIn("hand_pose", data.files)
 
     @patch("motion2mixamorig.checks._count_people", side_effect=AssertionError("YOLO imported"))
     def test_decode_checks_can_avoid_gvhmr_detector(self, _count):
@@ -163,6 +210,36 @@ class SamInferenceTests(unittest.TestCase):
             self.assertEqual(infer.call_count, 120)
             self.assertEqual(motion.n_frames, 120)
             self.assertAlmostEqual(motion.n_frames / motion.fps, 2, places=3)
+
+    @patch("motion2mixamorig.extractors.sam3d.require_cuda")
+    @patch("motion2mixamorig.extractors.sam3d.load_estimator")
+    @patch("motion2mixamorig.extractors.sam3d.load_person_detector")
+    @patch("motion2mixamorig.extractors.sam3d.person_boxes")
+    def test_video_native_hands_align_with_every_body_frame(self, boxes, _det, estimator, _cuda):
+        import cv2
+
+        boxes.return_value = np.array([[0, 0, 32, 32]])
+        points = np.arange(70 * 3, dtype=float).reshape(70, 3) / 100
+        estimator.return_value.process_one_image.side_effect = [
+            [{"pred_keypoints_3d": points + offset, "pred_cam_t": np.ones(3)}]
+            for offset in (0, 1, 2)
+        ]
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            video = root / "clip.avi"
+            writer = cv2.VideoWriter(str(video), cv2.VideoWriter_fourcc(*"MJPG"), 30, (32, 32))
+            self.assertTrue(writer.isOpened())
+            for _ in range(3):
+                writer.write(np.zeros((32, 32, 3), dtype=np.uint8))
+            writer.release()
+            output = Sam3dExtractor().extract(
+                video, root / "skeleton.npz", work_dir=root, device="cuda", detect_hands=True,
+            )
+            with np.load(output) as data:
+                hands = data["sam_hand_keypoints"]
+                self.assertEqual(len(hands), len(data["joints_3d"]))
+                self.assertEqual(hands.shape, (3, 2, 21, 3))
+                np.testing.assert_allclose(hands[2] - hands[0], np.tile([2, -2, -2], (2, 21, 1)), atol=1e-6)
 
     @patch("motion2mixamorig.checks._count_people", side_effect=AssertionError("YOLO imported"))
     @patch("motion2mixamorig.checks.check_smplx", side_effect=AssertionError("SMPL-X checked"))

@@ -33,6 +33,7 @@ from .extractors.hamer import (
     skeleton_has_hands,
 )
 from .mixamo.hand_retarget import build_hand_mapping, load_hand_motion
+from .mixamo.sam_hand_retarget import load_sam_hands
 from .human_motion import HumanMotion, foot_contact_from_cache, load_human_motion
 from .mixamo.animation import build_animation
 from .mixamo.gltf import write_glb
@@ -158,6 +159,11 @@ def run_pipeline(
                 detect_hands=detect_hands,
             )
         if detect_hands and skeleton_npz is not None and not skeleton_has_hands(motion_npz):
+            if read_extractor_name(motion_npz) == "sam3d":
+                raise ValueError(
+                    "This SAM skeleton has no saved native hands. Re-run the original "
+                    "video or image with --set-extractor sam3d --detect-hands, without --skeleton."
+                )
             cache_dir = find_body_cache(Path(skeleton_npz).parent)
             if cache_dir is None:
                 raise FileNotFoundError(
@@ -212,10 +218,15 @@ def run_pipeline(
 
         print("retargeting")
         frames = list(range(motion.n_frames))
-        hands = load_hand_motion(motion_npz, smooth_s=hand_smooth_s)
-        hand_mapping = None
-        if hands is not None:
-            hand_mapping = build_hand_mapping(asset.rig, hands.template_joints, verbose=verbose)
+        native_hands = load_sam_hands(motion_npz, asset.rig, smooth_s=hand_smooth_s)
+        if native_hands is not None:
+            hands, hand_mapping = native_hands
+        else:
+            hands = load_hand_motion(motion_npz, smooth_s=hand_smooth_s)
+            hand_mapping = None
+            if hands is not None:
+                assert hands.template_joints is not None
+                hand_mapping = build_hand_mapping(asset.rig, hands.template_joints, verbose=verbose)
         anim = build_animation(
             motion,
             mapping,
