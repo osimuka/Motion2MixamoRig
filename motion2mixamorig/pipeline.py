@@ -95,6 +95,7 @@ def run_pipeline(
     extractor: str = DEFAULT_EXTRACTOR,
     detect_hands: bool = False,
     hand_smooth_s: float = 0.08,
+    track_person: bool = False,
     skeleton_npz: Path | None = None,
     verbose: bool = True,
     output_dir: Path | None = None,
@@ -114,7 +115,10 @@ def run_pipeline(
     `no_preview` still writes the NPZ/GLB products but skips rendered previews.
     `foot_lock` pins planted feet using GVHMR's foot contact (when available).
     `rig=None` uses the original built-in T-pose mannequin.
+    `track_person` follows SAM's main detection instead of requiring exactly one.
     """
+    if track_person and (extractor != "sam3d" or skeleton_npz is not None):
+        raise ValueError("--track-person requires sam3d extraction without --skeleton")
     if image is None and video is None:
         raise ValueError("run_pipeline needs a video or an image")
     if image is not None:
@@ -157,6 +161,7 @@ def run_pipeline(
                 device=device,
                 verbose=verbose,
                 detect_hands=detect_hands,
+                track_person=track_person,
             )
         if detect_hands and skeleton_npz is not None and not skeleton_has_hands(motion_npz):
             if read_extractor_name(motion_npz) == "sam3d":

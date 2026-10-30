@@ -190,6 +190,28 @@ Synthetic tests cover landmark ordering, left/right chains, camera-rotation
 invariance, rotation/GLB export and skeleton reuse. Real native-hand inference
 and visual finger quality still need validation on the GPU Space.
 
+### Main-person tracking for background false positives
+
+Strict detection remains the default. If background clutter produces an extra
+person detection, enable **Track main person** and regenerate (or use
+`--set-extractor sam3d --track-person` in the CLI).
+
+The first frame must have a dominant largest person box (at least 1.5 times
+the area of the runner-up). Later frames follow that box by overlap, not by
+size rank: a larger background detection does not automatically take over.
+The match must have intersection-over-union of at least 0.30, an area ratio
+between 0.5 and 2, and an overlap lead of at least 0.15 over another candidate.
+Missing, discontinuous, or ambiguous matches still fail explicitly; no
+frames are skipped or replaced with frozen poses.
+
+This is geometric tracking, **not appearance-based identity recognition**.
+Crossing people, cuts, occlusion, or rapidly moving boxes can still fail or
+select incorrectly. Inspect the result. Extra detections are flagged in logs;
+the skeleton NPZ records `person_selection`, per-frame `sam_person_boxes`
+(source-pixel xyxy), and `sam_extra_detection_frames` (source frames, not
+repeated still-image hold frames). This option does not change saved skeletons
+and cannot be combined with `--skeleton`.
+
 ### Troubleshooting
 
 | Symptom | Action |
@@ -198,7 +220,7 @@ and visual finger quality still need validation on the GPU Space.
 | `PACKAGE_MISSING` / `No module named 'termcolor'` | Update to the current Dockerfile and `requirements-space.txt`, then rebuild. `termcolor` is a DINOv3 dependency, not a missing Motion2MixamoRig installation. |
 | Model access denied | Confirm SAM approval for the token's account, gated-model read permission, and the exact secret name `HF_TOKEN`; restart after changing it. |
 | CUDA unavailable | Confirm the active hardware is NVIDIA GPU, not CPU Basic with a GPU upgrade still pending. |
-| Missing or multiple people | Use a clip with exactly one clearly visible person throughout; no cuts or people entering the background. |
+| Missing or multiple people | For background false positives, enable **Track main person**. If the match is lost or ambiguous, crop to the intended person or use a clearer clip without cuts. |
 | Generic generation failure | Inspect the Space runtime logs for the traceback. Remove credentials and private media paths before sharing logs. |
 
 ## Motion limitations
@@ -207,8 +229,9 @@ This is an experimental adapter around an image-based estimator, not a
 replacement for GVHMR's world-motion tracking:
 
 - Use a **fixed, level camera**, no cuts, one person, head to toe throughout.
-  Detection runs on every frame; missing or multiple people stop the job rather
-  than dropping frames, freezing a pose or switching identities.
+  Detection runs on every frame; strict mode stops on missing or multiple
+  detections. Optional main-person tracking tolerates extra boxes but stops
+  on lost or ambiguous matches; neither mode drops frames or freezes poses.
 - SAM's metre-valued camera coordinates plus `pred_cam_t` are rotated to Y-up.
   Initial pelvis X/Z are centered and the lowest initial ankle/toe is placed at
   Y=0. Camera movement and tilt are **not** compensated.

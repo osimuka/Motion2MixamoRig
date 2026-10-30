@@ -98,6 +98,7 @@ def generate(
     rig_upload: str | None,
     detect_hands: bool = False,
     hand_smooth_s: float = 0.08,
+    track_person: bool = False,
     progress: gr.Progress = gr.Progress(),
 ) -> tuple[str, str]:
     uploads = (video_upload, image_upload, rig_upload)
@@ -147,6 +148,7 @@ def generate(
                     extractor="sam3d",
                     detect_hands=detect_hands,
                     hand_smooth_s=hand_smooth_s,
+                    track_person=track_person,
                     verbose=False,
                     output_dir=run_dir,
                     progress=SpaceProgressWriter(progress),
@@ -163,6 +165,11 @@ def generate(
                 "motion/diagnostics files. Uploaded inputs and intermediate run files "
                 "are discarded after this job. SAM uses camera-aligned motion: "
                 "camera movement is not removed and spine joints are approximated. "
+                + (
+                    "Main-person tracking was enabled: inspect subject selection; "
+                    "extra detections may have been ignored. "
+                    if track_person else ""
+                )
                 + (
                     "Quality report: diagnostics.json in the ZIP."
                     if (run_dir / "diagnostics.json").is_file()
@@ -239,6 +246,15 @@ are not retained in the attached Storage Bucket.
         api_name=False,
     )
     detect_hands = gr.Checkbox(label="Animate fingers (native SAM, experimental)", value=False)
+    track_person = gr.Checkbox(
+        label="Track main person (ignore extra background detections, experimental)",
+        value=False,
+        info=(
+            "Starts with the dominant largest detection, then follows box overlap. "
+            "Stops if lost or ambiguous. Not appearance-based identity tracking; "
+            "inspect results when people overlap."
+        ),
+    )
     hand_smooth = gr.Slider(
         minimum=0, maximum=0.3, value=0.08, step=0.01,
         label="Finger smoothing (seconds)",
@@ -248,7 +264,10 @@ are not retained in the attached Storage Bucket.
     result = gr.File(label="Download output bundle", interactive=False)
     run_button.click(
         generate,
-        inputs=[media_type, video_upload, image_upload, rig_upload, detect_hands, hand_smooth],
+        inputs=[
+            media_type, video_upload, image_upload, rig_upload,
+            detect_hands, hand_smooth, track_person,
+        ],
         outputs=[status, result],
         concurrency_limit=1,
         api_name=False,

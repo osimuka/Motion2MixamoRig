@@ -87,12 +87,14 @@ class MotionExtractor(Protocol):
         device: str = "cpu",
         verbose: bool = True,
         detect_hands: bool = False,
+        track_person: bool = False,
     ) -> Path:
         """Write the shared skeleton file for `source` (a video or a still).
 
         ``detect_hands`` asks the extractor to append its paired hand model
         into the same file. Preflight rejects the flag when this extractor
         has no paired hand model.
+        ``track_person`` enables conservative main-person selection in SAM only.
         """
 
 

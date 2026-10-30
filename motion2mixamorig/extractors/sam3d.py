@@ -8,6 +8,7 @@ The output uses the same joint-name contract as GVHMR, not the SMPL-X model.
 from __future__ import annotations
 
 import importlib.util
+import logging
 from pathlib import Path
 from typing import Protocol
 
@@ -29,6 +30,66 @@ CAMERA_CONVENTION = (
     "No camera-motion compensation or gravity recovery. Spine/collars approximated "
     "from landmarks; optional native hands use palm-relative landmark directions."
 )
+LOGGER = logging.getLogger(__name__)
+
+
+class MainPersonTracker:
+    """Conservative box-overlap tracking, not appearance-based identification."""
+
+    def __init__(self) -> None:
+        self.boxes: list[np.ndarray] = []
+        self.extra_detection_frames = 0
+
+    def select(self, boxes: np.ndarray, index: int) -> np.ndarray:
+        boxes = np.asarray(boxes, dtype=np.float32)
+        if (
+            boxes.ndim != 2 or boxes.shape[1] != 4
+            or not np.isfinite(boxes).all()
+            or np.any(boxes[:, 2:] <= boxes[:, :2])
+        ):
+            raise ValueError(f"SAM frame {index}: invalid person boxes")
+        if len(boxes) == 0:
+            raise ValueError(f"SAM frame {index}: main person lost; no person detected.")
+        areas = np.prod(boxes[:, 2:] - boxes[:, :2], axis=1)
+        if not self.boxes:
+            order = np.argsort(areas)[::-1]
+            chosen = int(order[0])
+            if len(order) > 1 and areas[chosen] < 1.5 * areas[order[1]]:
+                raise ValueError(
+                    f"SAM frame {index}: ambiguous main person; the largest detection "
+                    "must be at least 1.5 times the next largest. Crop to the intended person."
+                )
+        else:
+            previous = self.boxes[-1]
+            previous_area = np.prod(previous[2:] - previous[:2])
+            intersection = np.prod(np.maximum(
+                np.minimum(boxes[:, 2:], previous[2:])
+                - np.maximum(boxes[:, :2], previous[:2]), 0,
+            ), axis=1)
+            overlap = intersection / (areas + previous_area - intersection)
+            ratio = areas / previous_area
+            overlap[(ratio < 0.5) | (ratio > 2.0)] = 0
+            order = np.argsort(overlap)[::-1]
+            chosen = int(order[0])
+            if overlap[chosen] < 0.3:
+                raise ValueError(
+                    f"SAM frame {index}: main person lost; no continuous box match. "
+                    "Use a clip without cuts or crop to the intended person."
+                )
+            if len(order) > 1 and overlap[chosen] - overlap[order[1]] < 0.15:
+                raise ValueError(
+                    f"SAM frame {index}: ambiguous main-person match; "
+                    "overlapping detections cannot be safely distinguished."
+                )
+        self.boxes.append(boxes[chosen].copy())
+        if len(boxes) > 1:
+            if self.extra_detection_frames == 0:
+                LOGGER.warning(
+                    "SAM main-person mode: ignoring extra detections from frame %d; "
+                    "inspect the output for subject-selection errors", index,
+                )
+            self.extra_detection_frames += 1
+        return boxes[chosen:chosen + 1]
 
 
 class BodyEstimator(Protocol):
@@ -157,14 +218,18 @@ def person_boxes(frame: np.ndarray, detector, device: str) -> np.ndarray:
 def infer_frame(
     frame: np.ndarray, estimator: BodyEstimator, detector, index: int,
     *, hand_frames: list[np.ndarray] | None = None,
+    tracker: MainPersonTracker | None = None,
 ) -> np.ndarray:
     import cv2
 
     boxes = person_boxes(frame, detector, "cuda")
-    if len(boxes) != 1:
+    if tracker is not None:
+        boxes = tracker.select(boxes, index)
+    elif len(boxes) != 1:
         raise ValueError(
             f"SAM frame {index}: detected {len(boxes)} people; exactly one clearly "
-            "visible person is required in every frame. Trim or replace the clip."
+            "visible person is required in strict mode. For background false positives, "
+            "enable Track main person (--track-person), or trim/crop the clip."
         )
     predictions = estimator.process_one_image(
         cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), bboxes=boxes,
@@ -223,6 +288,7 @@ class Sam3dExtractor:
         device: str = "cpu",
         verbose: bool = True,
         detect_hands: bool = False,
+        track_person: bool = False,
     ) -> Path:
         import cv2
 
@@ -233,11 +299,14 @@ class Sam3dExtractor:
         is_still = paths.is_image(source)
         frames: list[np.ndarray] = []
         hand_frames: list[np.ndarray] | None = [] if detect_hands else None
+        tracker = MainPersonTracker() if track_person else None
         if is_still:
             image = cv2.imread(str(source))
             if image is None:
                 raise ValueError(f"Cannot decode still image: {source}")
-            pose = infer_frame(image, estimator, detector, 0, hand_frames=hand_frames)
+            pose = infer_frame(
+                image, estimator, detector, 0, hand_frames=hand_frames, tracker=tracker,
+            )
             frames = [pose] * 32
             if hand_frames is not None:
                 hand_frames *= 32
@@ -257,6 +326,7 @@ class Sam3dExtractor:
                         break
                     frames.append(infer_frame(
                         image, estimator, detector, len(frames), hand_frames=hand_frames,
+                        tracker=tracker,
                     ))
                     if verbose and len(frames) % 30 == 0:
                         print(f"SAM 3D Body: {len(frames)}/{expected} frames", flush=True)
@@ -268,6 +338,20 @@ class Sam3dExtractor:
             finally:
                 capture.release()
         joints = smooth_and_align(np.stack(frames), fps)
+        selection_arrays = {"person_selection": np.array("strict")}
+        if tracker is not None:
+            selected = np.stack(tracker.boxes)
+            if is_still:
+                selected = np.repeat(selected, len(joints), axis=0)
+            selection_arrays = {
+                "person_selection": np.array("main_person"),
+                "sam_person_boxes": selected,
+                "sam_extra_detection_frames": np.array(tracker.extra_detection_frames, dtype=np.int64),
+            }
+            LOGGER.info(
+                "SAM main-person selection completed; extra detections in %d source frames",
+                tracker.extra_detection_frames,
+            )
         hand_arrays = {}
         if hand_frames is not None:
             if len(hand_frames) != len(joints):
@@ -293,5 +377,6 @@ class Sam3dExtractor:
             coordinate_convention=np.array(CAMERA_CONVENTION),
             model_id=np.array(MODEL_ID),
             model_revision=np.array(MODEL_REVISION),
+            **selection_arrays,
             **hand_arrays,
         )

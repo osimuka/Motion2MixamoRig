@@ -275,7 +275,10 @@ class GvhmrExtractor:
         device: str = "cpu",
         verbose: bool = True,
         detect_hands: bool = False,
+        track_person: bool = False,
     ) -> Path:
+        if track_person:
+            raise ValueError("--track-person is supported only by the sam3d extractor")
         source = Path(source)
         if paths.is_image(source):
             with temp_hold_video(source) as hold:

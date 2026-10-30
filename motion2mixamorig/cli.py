@@ -289,6 +289,12 @@ def preflight(args: argparse.Namespace) -> tuple[Path | None, Path, Path | None,
         extractor_error = str(exc)
 
     skeleton = Path(args.skeleton) if args.skeleton else None
+    if bool(getattr(args, "track_person", False)):
+        check(
+            "main-person tracking",
+            chosen_name == "sam3d" and skeleton is None,
+            "--track-person requires --set-extractor sam3d without --skeleton",
+        )
     if skeleton is not None:
         check(
             f"skeleton npz       {skeleton}",
@@ -387,6 +393,7 @@ def run(args: argparse.Namespace) -> int:
             extractor=getattr(args, "set_extractor", None) or DEFAULT_EXTRACTOR,
             detect_hands=bool(getattr(args, "detect_hands", False)),
             hand_smooth_s=float(getattr(args, "hand_smooth", 0.08)),
+            track_person=bool(getattr(args, "track_person", False)),
             skeleton_npz=skeleton,
             output_dir=output_dir,
             progress=progress,
@@ -442,6 +449,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_extractor_arg(p_run)
     _add_detect_hands_arg(p_run)
+    p_run.add_argument(
+        "--track-person",
+        action="store_true",
+        help=(
+            "SAM only: start with the dominant largest person and follow box overlap; "
+            "ignore extra detections, but stop on a lost or ambiguous match"
+        ),
+    )
     p_run.add_argument(
         "--hand-smooth",
         type=float,

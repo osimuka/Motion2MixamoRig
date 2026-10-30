@@ -152,6 +152,7 @@ class MannequinTests(unittest.TestCase):
                 def pipeline(video, chosen_rig, **kwargs):
                     self.assertEqual(kwargs["detect_hands"], custom)
                     self.assertEqual(kwargs["hand_smooth_s"], 0.12)
+                    self.assertEqual(kwargs["track_person"], configured)
                     captured.append(chosen_rig)
                     out = kwargs["output_dir"]
                     out.mkdir()
@@ -168,6 +169,7 @@ class MannequinTests(unittest.TestCase):
                     status, archive = app.generate(
                         "Still image", None, str(image), str(rig) if custom else None,
                         detect_hands=custom, hand_smooth_s=0.12,
+                        track_person=configured,
                     )
                 self.assertEqual(len(captured), 1)
                 self.assertEqual(captured[0] is None, not (custom or configured))
@@ -177,6 +179,7 @@ class MannequinTests(unittest.TestCase):
                     self.assertEqual(captured[0], rig)
                 self.assertEqual(validate.call_count, int(custom or configured))
                 self.assertIn("diagnostics.json", status)
+                self.assertEqual("Main-person tracking was enabled" in status, configured)
                 self.assertTrue(Path(archive).is_file())
 
     def test_missing_configured_default_does_not_silently_fall_back(self):

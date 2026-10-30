@@ -14,6 +14,7 @@ import numpy as np
 from motion2mixamorig.extractors import DEFAULT_EXTRACTOR, get_extractor
 from motion2mixamorig.extractors.base import SMPL_JOINT_NAMES, write_skeleton_npz
 from motion2mixamorig.extractors.sam3d import (
+    MainPersonTracker,
     Sam3dExtractor,
     infer_frame,
     map_keypoints,
@@ -100,7 +101,89 @@ class SamMappingTests(unittest.TestCase):
             self.assertIsNone(motion.foot_contact)
 
 
+class MainPersonTrackingTests(unittest.TestCase):
+    def test_selects_dominant_person_and_follows_despite_larger_background_box(self):
+        tracker = MainPersonTracker()
+        with self.assertLogs("motion2mixamorig.extractors.sam3d", level="WARNING"):
+            selected = tracker.select(np.array([[300, 0, 330, 60], [0, 0, 100, 200]]), 0)
+        np.testing.assert_array_equal(selected, [[0, 0, 100, 200]])
+        selected = tracker.select(np.array([[300, 0, 500, 300], [10, 0, 110, 200]]), 1)
+        np.testing.assert_array_equal(selected, [[10, 0, 110, 200]])
+        self.assertEqual(tracker.extra_detection_frames, 2)
+
+    def test_similar_sized_initial_people_are_ambiguous(self):
+        with self.assertRaisesRegex(ValueError, "frame 0: ambiguous"):
+            MainPersonTracker().select(np.array([[0, 0, 100, 200], [300, 0, 400, 200]]), 0)
+
+    def test_lost_or_ambiguous_match_never_updates_track(self):
+        for boxes, error in (
+            (np.empty((0, 4)), "lost"),
+            (np.array([[300, 0, 400, 200]]), "lost"),
+            (np.array([[0, 0, 100, 200], [5, 0, 105, 200]]), "ambiguous"),
+            (np.array([[0, 0, 300, 600]]), "lost"),
+        ):
+            with self.subTest(boxes=boxes):
+                tracker = MainPersonTracker()
+                tracker.select(np.array([[0, 0, 100, 200]]), 0)
+                with self.assertRaisesRegex(ValueError, f"frame 62: .*{error}"):
+                    tracker.select(boxes, 62)
+                self.assertEqual(len(tracker.boxes), 1)
+
+    def test_overlap_threshold_and_margin(self):
+        tracker = MainPersonTracker()
+        tracker.select(np.array([[0, 0, 100, 100]]), 0)
+        # A 50-pixel shift has IoU 1/3 and is accepted.
+        np.testing.assert_array_equal(
+            tracker.select(np.array([[50, 0, 150, 100]]), 1), [[50, 0, 150, 100]],
+        )
+        with self.assertRaisesRegex(ValueError, "lost"):
+            tracker.select(np.array([[110, 0, 210, 100]]), 2)
+        tracker = MainPersonTracker()
+        tracker.select(np.array([[0, 0, 100, 100]]), 0)
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            tracker.select(np.array([[50, 0, 150, 100], [-60, 0, 40, 100]]), 1)
+
+    def test_invalid_boxes_rejected(self):
+        for boxes in (
+            np.zeros((2, 4)), np.ones((4,)), np.ones((1, 3)),
+            np.array([[0, 0, np.inf, 100]]),
+        ):
+            with self.assertRaisesRegex(ValueError, "invalid person boxes"):
+                MainPersonTracker().select(boxes, 0)
+
+    def test_pipeline_and_gvhmr_reject_unsupported_tracking(self):
+        from motion2mixamorig.pipeline import run_pipeline
+
+        with self.assertRaisesRegex(ValueError, "requires sam3d"):
+            run_pipeline(Path("clip.mp4"), None, track_person=True)
+        with self.assertRaisesRegex(ValueError, "without --skeleton"):
+            run_pipeline(
+                Path("clip.mp4"), None, extractor="sam3d", track_person=True,
+                skeleton_npz=Path("saved.npz"),
+            )
+        with self.assertRaisesRegex(ValueError, "only by the sam3d"):
+            get_extractor("gvhmr").extract(
+                Path("clip.mp4"), Path("out.npz"), work_dir=Path("."), track_person=True,
+            )
+
+
 class SamInferenceTests(unittest.TestCase):
+    @patch("motion2mixamorig.extractors.sam3d.person_boxes")
+    def test_tracker_passes_only_selected_box_to_estimator(self, boxes):
+        boxes.return_value = np.array([[0, 0, 100, 200], [300, 0, 330, 60]])
+        estimator = Mock()
+        estimator.process_one_image.return_value = [{
+            "pred_keypoints_3d": np.zeros((70, 3)), "pred_cam_t": np.ones(3),
+        }]
+        with self.assertLogs("motion2mixamorig.extractors.sam3d", level="WARNING"):
+            infer_frame(
+                np.zeros((8, 8, 3), dtype=np.uint8), estimator, Mock(), 0,
+                tracker=MainPersonTracker(),
+            )
+        np.testing.assert_array_equal(
+            estimator.process_one_image.call_args.kwargs["bboxes"], [[0, 0, 100, 200]],
+        )
+
     @patch("motion2mixamorig.extractors.sam3d.person_boxes")
     def test_missing_or_multiple_people_fail_instead_of_skipping_frames(self, boxes):
         for count in (0, 2):
@@ -166,16 +249,26 @@ class SamInferenceTests(unittest.TestCase):
             root = Path(temp)
             image = root / "pose.png"
             cv2.imwrite(str(image), np.zeros((8, 8, 3), dtype=np.uint8))
-            output = Sam3dExtractor().extract(
-                image, root / "skeleton.npz", work_dir=root, device="cuda", detect_hands=True,
-            )
-            self.assertTrue(skeleton_has_hands(output))
-            with np.load(output) as data:
-                hands = data["sam_hand_keypoints"]
-                self.assertEqual(hands.shape, (32, 2, 21, 3))
-                np.testing.assert_array_equal(hands[0], hands[-1])
-                self.assertEqual(str(data["hands"]), "sam3d_native")
-                self.assertNotIn("hand_pose", data.files)
+            for tracking in (False, True):
+                with self.subTest(tracking=tracking):
+                    output = Sam3dExtractor().extract(
+                        image, root / "skeleton.npz", work_dir=root, device="cuda",
+                        detect_hands=True, track_person=tracking,
+                    )
+                    self.assertTrue(skeleton_has_hands(output))
+                    with np.load(output) as data:
+                        hands = data["sam_hand_keypoints"]
+                        self.assertEqual(hands.shape, (32, 2, 21, 3))
+                        np.testing.assert_array_equal(hands[0], hands[-1])
+                        self.assertEqual(str(data["hands"]), "sam3d_native")
+                        self.assertNotIn("hand_pose", data.files)
+                        self.assertEqual(
+                            str(data["person_selection"]), "main_person" if tracking else "strict",
+                        )
+                        if tracking:
+                            self.assertEqual(data["sam_person_boxes"].shape, (32, 4))
+                            np.testing.assert_array_equal(data["sam_person_boxes"][0], [0, 0, 8, 8])
+                            self.assertEqual(int(data["sam_extra_detection_frames"]), 0)
 
     @patch("motion2mixamorig.checks._count_people", side_effect=AssertionError("YOLO imported"))
     def test_decode_checks_can_avoid_gvhmr_detector(self, _count):
@@ -218,7 +311,11 @@ class SamInferenceTests(unittest.TestCase):
     def test_video_native_hands_align_with_every_body_frame(self, boxes, _det, estimator, _cuda):
         import cv2
 
-        boxes.return_value = np.array([[0, 0, 32, 32]])
+        boxes.side_effect = [
+            np.array([[0, 0, 20, 32]]),
+            np.array([[26, 0, 32, 16], [1, 0, 21, 32]]),
+            np.array([[2, 0, 22, 32]]),
+        ]
         points = np.arange(70 * 3, dtype=float).reshape(70, 3) / 100
         estimator.return_value.process_one_image.side_effect = [
             [{"pred_keypoints_3d": points + offset, "pred_cam_t": np.ones(3)}]
@@ -232,14 +329,22 @@ class SamInferenceTests(unittest.TestCase):
             for _ in range(3):
                 writer.write(np.zeros((32, 32, 3), dtype=np.uint8))
             writer.release()
-            output = Sam3dExtractor().extract(
-                video, root / "skeleton.npz", work_dir=root, device="cuda", detect_hands=True,
-            )
+            with self.assertLogs("motion2mixamorig.extractors.sam3d", level="WARNING"):
+                output = Sam3dExtractor().extract(
+                    video, root / "skeleton.npz", work_dir=root, device="cuda",
+                    detect_hands=True, track_person=True,
+                )
             with np.load(output) as data:
                 hands = data["sam_hand_keypoints"]
                 self.assertEqual(len(hands), len(data["joints_3d"]))
                 self.assertEqual(hands.shape, (3, 2, 21, 3))
                 np.testing.assert_allclose(hands[2] - hands[0], np.tile([2, -2, -2], (2, 21, 1)), atol=1e-6)
+                self.assertEqual(str(data["person_selection"]), "main_person")
+                np.testing.assert_array_equal(
+                    data["sam_person_boxes"],
+                    [[0, 0, 20, 32], [1, 0, 21, 32], [2, 0, 22, 32]],
+                )
+                self.assertEqual(int(data["sam_extra_detection_frames"]), 1)
 
     @patch("motion2mixamorig.checks._count_people", side_effect=AssertionError("YOLO imported"))
     @patch("motion2mixamorig.checks.check_smplx", side_effect=AssertionError("SMPL-X checked"))
@@ -257,6 +362,7 @@ class SamInferenceTests(unittest.TestCase):
             args = build_parser().parse_args([
                 "run", "--image", str(image), "--rig", str(rig),
                 "--set-extractor", "sam3d", "--device", "cuda",
+                "--track-person",
             ])
             with contextlib.redirect_stdout(io.StringIO()):
                 _, chosen_rig, _, chosen_image = preflight(args)
