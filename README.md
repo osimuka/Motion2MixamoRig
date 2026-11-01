@@ -56,7 +56,7 @@ approval and an `HF_TOKEN` Space secret are required. The adapter is
 experimental: use a fixed, level camera; moving-camera world recovery is not
 supported. Optional **Animate fingers** uses SAM's native hand decoder, without
 HaMeR or MANO. Character upload is optional:
-the Space animates its **Default Mannequin** when no FBX is supplied. Owners can
+the Space animates its **red Default Mannequin** when no FBX is supplied. Owners can
 use the included [Default Mannequin](private_assets/default_mannequin.fbx) by
 setting `M2MR_DEFAULT_RIG=/app/private_assets/default_mannequin.fbx`, or configure
 another character. Without that setting, an original blue low-poly T-pose doll

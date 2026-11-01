@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import struct
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -83,6 +84,33 @@ def _vertex_normals(vertices: np.ndarray, faces: np.ndarray) -> np.ndarray:
     return (normals / np.where(length < 1e-12, 1.0, length)).astype(np.float32)
 
 
+def _diffuse_atlas(samples: np.ndarray) -> tuple[bytes, np.ndarray]:
+    """One nearest-filtered sRGB texel per face, shared by its three corners."""
+    count = len(samples)
+    width = max(1, int(np.ceil(np.sqrt(count))))
+    height = max(1, int(np.ceil(count / width)))
+    pixels = np.zeros((height * width, 3), dtype=np.uint8)
+    pixels[:count] = np.rint(np.clip(samples[:, ::-1], 0, 255)).astype(np.uint8)
+    pixels = pixels.reshape(height, width, 3)
+
+    def chunk(kind: bytes, content: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(content)) + kind + content
+            + struct.pack(">I", zlib.crc32(kind + content))
+        )
+
+    rows = b"".join(b"\x00" + row.tobytes() for row in pixels)
+    png = (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(rows))
+        + chunk(b"IEND", b"")
+    )
+    indices = np.arange(count)
+    uv = np.column_stack(((indices % width + 0.5) / width, (indices // width + 0.5) / height))
+    return png, np.repeat(uv, 3, axis=0).astype(np.float32)
+
+
 def write_glb(
     path: Path,
     asset: YBotAsset,
@@ -145,13 +173,16 @@ def write_glb(
     meshes: list[dict] = []
     skins: list[dict] = []
     materials = []
+    images: list[dict] = []
+    textures: list[dict] = []
     for mesh_i, mesh in enumerate(asset.meshes):
         verts = (mesh.vertices * scale).astype(np.float32)
         faces = np.ascontiguousarray(mesh.faces, dtype=np.uint32)
         joints, weights = _top4_weights(mesh.weights)
         normals = _vertex_normals(verts.astype(np.float64), mesh.faces)
         color = np.clip(np.asarray(mesh.color, dtype=np.float64).reshape(3), 0, 1)
-        vertex_colors = None
+        texcoords = None
+        texture_index = None
         if mesh.face_colors is not None:
             samples = np.asarray(mesh.face_colors, dtype=np.float64)
             if samples.shape != (len(mesh.faces), 3) or not np.isfinite(samples).all():
@@ -160,10 +191,12 @@ def write_glb(
             verts, normals = verts[corners], normals[corners]
             joints, weights = joints[corners], weights[corners]
             faces = np.arange(len(corners), dtype=np.uint32).reshape(-1, 3)
-            # FBX samples are BGR/sRGB; glTF vertex colors are linear RGB.
-            srgb = np.clip(samples[:, ::-1] / 255.0, 0, 1)
-            linear = np.where(srgb <= 0.04045, srgb / 12.92, ((srgb + 0.055) / 1.055) ** 2.4)
-            vertex_colors = np.repeat(linear, 3, axis=0).astype(np.float32)
+            png, texcoords = _diffuse_atlas(samples)
+            offset, length = blob.add(png)
+            views.append({"buffer": 0, "byteOffset": offset, "byteLength": length})
+            images.append({"bufferView": len(views) - 1, "mimeType": "image/png"})
+            textures.append({"sampler": 0, "source": len(images) - 1})
+            texture_index = len(textures) - 1
             color = np.ones(3)
         materials.append({
             "name": mesh.name,
@@ -171,6 +204,10 @@ def write_glb(
                 "baseColorFactor": [float(color[0]), float(color[1]), float(color[2]), 1.0],
                 "metallicFactor": 0.0,
                 "roughnessFactor": 0.7,
+                **(
+                    {"baseColorTexture": {"index": texture_index}}
+                    if texture_index is not None else {}
+                ),
             },
         })
         primitive = {
@@ -183,8 +220,8 @@ def write_glb(
             "indices": accessor(faces.reshape(-1), "SCALAR", 5125, target=34963),
             "material": len(materials) - 1,
         }
-        if vertex_colors is not None:
-            primitive["attributes"]["COLOR_0"] = accessor(vertex_colors, "VEC3", 5126, target=34962)
+        if texcoords is not None:
+            primitive["attributes"]["TEXCOORD_0"] = accessor(texcoords, "VEC2", 5126, target=34962)
         meshes.append({"name": mesh.name or f"character_mesh_{mesh_i}", "primitives": [primitive]})
 
         ibm = np.stack(
@@ -257,6 +294,12 @@ def write_glb(
         "bufferViews": views,
         "buffers": [{"byteLength": blob._cursor}],
     }
+    if textures:
+        gltf.update({
+            "images": images,
+            "textures": textures,
+            "samplers": [{"magFilter": 9728, "minFilter": 9728, "wrapS": 33071, "wrapT": 33071}],
+        })
 
     json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
     json_pad = (4 - len(json_bytes) % 4) % 4

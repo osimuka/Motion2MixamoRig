@@ -21,7 +21,51 @@ from motion2mixamorig.mixamo.skinned_mesh import rest_skin_error
 from motion2mixamorig.mixamo.tpose_calibration import REQUIRED_BONES, calibrate_rig
 
 
+def _exported_diffuse(gltf, binary, primitive):
+    import cv2
+
+    material = gltf["materials"][primitive["material"]]["pbrMetallicRoughness"]
+    texture = gltf["textures"][material["baseColorTexture"]["index"]]
+    image = gltf["images"][texture["source"]]
+    view = gltf["bufferViews"][image["bufferView"]]
+    start = view.get("byteOffset", 0)
+    png = binary[start:start + view["byteLength"]]
+    pixels = cv2.imdecode(np.frombuffer(png, dtype=np.uint8), cv2.IMREAD_COLOR)[:, :, ::-1]
+    uv = _accessor(gltf, binary, primitive["attributes"]["TEXCOORD_0"])
+    x = np.floor(uv[:, 0] * pixels.shape[1]).astype(int)
+    y = np.floor(uv[:, 1] * pixels.shape[0]).astype(int)
+    return pixels[y, x]
+
+
 class MannequinTests(unittest.TestCase):
+    def test_included_default_preserves_red_appearance_and_finger_rig(self):
+        from motion2mixamorig.mixamo.gltf import write_glb
+        from motion2mixamorig.mixamo.skinned_mesh import load_character_asset
+
+        rig_path = Path(__file__).resolve().parents[1] / "private_assets/default_mannequin.fbx"
+        asset = load_character_asset(rig_path, textures=True)
+        self.assertEqual(len(asset.meshes), 1)
+        self.assertEqual(len(asset.rig.bones), 55)
+        self.assertLess(rest_skin_error(asset), 1e-4)
+        for side in ("Left", "Right"):
+            for finger in ("Thumb", "Index", "Middle", "Ring", "Pinky"):
+                for joint in (1, 2, 3):
+                    self.assertIn(f"mixamorig:{side}Hand{finger}{joint}", asset.rig.bones)
+        mesh = asset.meshes[0]
+        self.assertIsNotNone(mesh.face_colors)
+        self.assertGreater(mesh.face_colors[:, 2].mean(), mesh.face_colors[:, 0].mean())
+        np.testing.assert_allclose(mesh.weights.sum(axis=1), 1, atol=1e-6)
+        with tempfile.TemporaryDirectory() as temp:
+            output = write_glb(
+                Path(temp) / "default.glb", asset, [{}],
+                [asset.rig.bones["mixamorig:Hips"].rest_world[:3, 3]], 30,
+            )
+            gltf, binary = read_glb(output)
+            primitive = gltf["meshes"][0]["primitives"][0]
+            exported = _exported_diffuse(gltf, binary, primitive)
+            np.testing.assert_array_equal(exported, np.repeat(mesh.face_colors[:, ::-1], 3, axis=0))
+            self.assertNotIn("COLOR_0", primitive["attributes"])
+
     def test_glb_preserves_diffuse_samples_and_skin_weights(self):
         from motion2mixamorig.mixamo.gltf import write_glb
 
@@ -37,10 +81,11 @@ class MannequinTests(unittest.TestCase):
             gltf, binary = read_glb(output)
             primitive = gltf["meshes"][0]["primitives"][0]
             attrs = primitive["attributes"]
-            colors = _accessor(gltf, binary, attrs["COLOR_0"])
-            expected_red = ((128 / 255 + 0.055) / 1.055) ** 2.4
-            np.testing.assert_allclose(colors[:3], np.tile([expected_red, 0, 0], (3, 1)), atol=1e-6)
-            np.testing.assert_allclose(colors[3:6], np.tile([0, 0, 1], (3, 1)))
+            colors = _exported_diffuse(gltf, binary, primitive)
+            np.testing.assert_array_equal(colors[:3], np.tile([128, 0, 0], (3, 1)))
+            np.testing.assert_array_equal(colors[3:6], np.tile([0, 0, 255], (3, 1)))
+            self.assertEqual(gltf["samplers"][0]["minFilter"], 9728)
+            self.assertEqual(gltf["samplers"][0]["magFilter"], 9728)
             weights = _accessor(gltf, binary, attrs["WEIGHTS_0"])
             np.testing.assert_allclose(weights.sum(axis=1), 1)
             positions = _accessor(gltf, binary, attrs["POSITION"])

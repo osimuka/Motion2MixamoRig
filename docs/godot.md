@@ -28,9 +28,13 @@ The exported clip is not automatically looped: a recorded action need not have
 matching first and last poses. Enable looping in Godot's advanced animation
 import settings only when the motion is suitable, then reimport.
 
-## Preserve the mannequin's blue colors
+## Preserve the mannequin's colors
 
-The exporter stores diffuse-sampled colors in glTF `COLOR_0`. Some Godot
+New exports embed a PNG albedo texture and UVs, so the red Default Mannequin
+displays its colors in Godot automatically. No import helper is needed.
+The sampled face colors are preserved; source normal/roughness maps are not.
+
+Older exports store diffuse-sampled colors in glTF `COLOR_0`. Some Godot
 imports retain the color arrays but leave the material's **Vertex Color →
 Use as Albedo** disabled. If the character looks white, enable that property
 on its material, or apply the supplied import helper:
@@ -43,8 +47,7 @@ on its material, or apply the supplied import helper:
 3. The helper enables vertex colors on imported meshes that actually have
    color arrays, without replacing their skinning or animation.
 
-The output uses sampled diffuse colors, not the original normal/roughness
-texture maps. Those source PBR maps are not embedded in this GLB.
+The helper remains useful for those older vertex-color exports.
 
 ## Movement and reuse
 
@@ -69,3 +72,7 @@ bone rotations. Vertex color arrays were retained; reimporting with the
 material helper enabled the albedo flag while preserving working animation.
 Other Godot versions and arbitrary
 character rigs have not all been tested.
+
+The red albedo-atlas export was also tested with Godot 4.7.2: the editor
+import preserved the embedded red texture, UVs, 55-bone skin and moving
+`mixamo_clip` without the helper or the vertex-color albedo flag.

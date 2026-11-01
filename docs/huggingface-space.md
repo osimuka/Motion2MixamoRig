@@ -4,7 +4,7 @@ This 4onstudios LTD improvement fork of
 [Motion2MixamoRig](https://github.com/MaxLiu22/Motion2MixamoRig) provides a
 browser UI for one-person video or still-image input and an optional Mixamo
 character FBX. Without a character upload it uses the Space's **Default
-Mannequin**. The owner's blue model is included in the repository and can be
+Mannequin**. The owner's red model is included in the repository and can be
 selected with `M2MR_DEFAULT_RIG`; without that configuration the app
 uses an original, built-in blue low-poly mannequin with a Mixamo-compatible
 skeleton and T-pose bind pose.
@@ -103,11 +103,17 @@ Despite the historical directory name, this specific model is tracked;
 other files under `private_assets/` remain git-ignored.
 Do not add other third-party models without permission to redistribute them.
 
-The supplied blue character was converted locally from GLB, preserving its
+The supplied character was converted locally from GLB, preserving its
 body mesh and diffuse-sampled colors, remapping the skeleton to Mixamo names, and
 removing the racket so the default stays a general-purpose mannequin.
-The current FBX/GLB pipeline samples the diffuse texture into face/vertex
-colors; it does not embed the original texture or preserve full source PBR
+The Default Mannequin now uses the red albedo from the owner's
+`5-Moving up and down.GODOT.glb` for clearer visual contrast. Only its diffuse
+appearance was transferred: the existing T-pose, mesh, weights and 30 finger
+bones are unchanged. The source animation and racket are not included.
+The current FBX/GLB pipeline samples the diffuse texture into face colors,
+then embeds those samples as a small PNG albedo atlas with UVs. Godot and
+Blender display this without enabling vertex-colour materials. It does not
+embed the original full-resolution texture or preserve full source PBR
 materials such as normal, roughness, transmission, and clearcoat maps.
 The source pack and its other animations are not deployed.
 The included asset retains its applicable asset rights; inclusion does not
