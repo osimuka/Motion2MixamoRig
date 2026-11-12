@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-11-12
+
+### Added
+
+- Preview-enabled runs save a looping `mixamo_character.gif` in the output directory and list it in `run.json`. Video runs show the character animation; still runs show the turntable comparison. GIFs are silent, fit within 480 x 480 pixels, and preserve the preview duration at up to 15 fps. `--no-preview` skips them.
+- Pillow is an explicit dependency for GIF export.
+
+### Fixed
+
+- Floor alignment now handles stills and clips without detected foot contacts. A constant vertical offset places the lowest sole on the floor while preserving frame-to-frame vertical movement. Fully airborne clips may need a manual height adjustment.
+- Grounded previews use floor height zero, matching the exported character animation. The ungrounded still turntable uses the lowest mesh vertex instead of a percentile through the mesh.
+
 ## [0.1.8] - 2026-10-24
 
 Tested on macOS (Apple Silicon) only. A Windows build is coming soon.

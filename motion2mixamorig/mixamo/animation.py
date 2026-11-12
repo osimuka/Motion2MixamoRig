@@ -126,7 +126,7 @@ def build_animation(
             )
     elif verbose and foot_lock:
         print("  foot lock: no foot contact in the skeleton; skipped")
-    if asset is not None and contact_frames is not None and len(frames) > 1:
+    if asset is not None and frames:
         anim.ground = plant_soles(anim, mapping, asset, contact_frames)
         if verbose and anim.ground is not None:
             sole = anim.ground["support_sole_cm"]

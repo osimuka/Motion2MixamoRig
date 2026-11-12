@@ -259,6 +259,7 @@ outputs/20260829_193205_dance/          # or …_pose/ for a still
 ├── skeleton_motion.npz                 # 3D human skeleton (reuse with --skeleton)
 ├── mixamo_rotations.npz                # per-bone Mixamo rotations
 ├── mixamo_character.glb                # skinned character, import into Blender / Unity
+├── mixamo_character.gif                # looping preview (unless --no-preview)
 ├── diagnostics.json                    # self-intersection report (see Quick Start step 6)
 ├── diagnostics.html                    # only after `m2mr diagnose <run> --visualize`
 └── videos/   or   images/              # previews — which one depends on the input
@@ -287,6 +288,10 @@ images/
 └── before_after_360_compare.mp4        # left: original photo
                                         # right: 10° orbit of the rig (one full turn)
 ```
+
+The root `mixamo_character.gif` shows the animated character for video input, or the turntable comparison for a still. It loops silently at up to 15 fps, fits within 480 x 480 pixels, and keeps the preview's duration. `--no-preview` skips all rendered previews, including the GIF.
+
+The character's planted soles are aligned to floor height zero in the animation and previews. When foot contacts are unavailable (including stills), one constant vertical offset puts the clip's lowest sole on the floor without flattening jumps. This fallback assumes the lowest sole should touch the floor; fully airborne clips may need a manual height adjustment. The correction is recorded under `ground` in `run.json`.
 
 With `--detect-hands`, `skeleton_motion.npz` also stores the finger rotations, and `mixamo_rotations.npz` / `mixamo_character.glb` include the 30 finger bones. Without that flag, and without hand motion already stored in a reused skeleton, those bones stay at rest.
 

@@ -38,6 +38,61 @@ def _exported_diffuse(gltf, binary, primitive):
 
 
 class MannequinTests(unittest.TestCase):
+    def test_ground_without_contacts_preserves_vertical_motion_and_grounds_stills(self):
+        from motion2mixamorig.mixamo.animation import RetargetedAnimation
+        from motion2mixamorig.mixamo.ground import plant_soles, sole_heights_m
+        from motion2mixamorig.mixamo.ybot_retarget import build_mapping
+
+        asset = build_mannequin(Path("mannequin.json"))
+        rest = world_positions_m(asset.rig, forward_kinematics(asset.rig, {}))
+        mapping = build_mapping(calibrate_rig(asset.rig, rest, {}), verbose=False, target_rig=asset.rig)
+        for heights in ([80.0], [80.0, 130.0, 100.0]):
+            with self.subTest(heights=heights):
+                hips = [np.array([index * 10.0, height, 0.0]) for index, height in enumerate(heights)]
+                anim = RetargetedAnimation(
+                    frames=list(range(len(hips))), fps=30.0,
+                    r_anim_skeleton=[{} for _ in hips], r_anim_rig=[{} for _ in hips],
+                    hips_cm_skeleton=[value.copy() for value in hips],
+                    hips_cm_rig=[value.copy() for value in hips],
+                    mixamo_pos=[], rig_pos=[], human_pos=[],
+                )
+                before = sole_heights_m(asset, anim.r_anim_rig, anim.hips_cm_rig)
+                stats = plant_soles(anim, mapping, asset)
+                after = sole_heights_m(asset, anim.r_anim_rig, anim.hips_cm_rig)
+                self.assertIsNotNone(stats)
+                self.assertAlmostEqual(float(np.nanmin(after)), 0.0)
+                np.testing.assert_allclose(np.diff(after, axis=0), np.diff(before, axis=0))
+                np.testing.assert_allclose(np.stack(anim.hips_cm_rig)[:, [0, 2]], np.stack(hips)[:, [0, 2]])
+                self.assertEqual(len(anim.rig_pos), len(hips))
+
+    def test_gif_preserves_duration_color_and_loop(self):
+        import cv2
+        from PIL import Image, ImageSequence
+        from motion2mixamorig.videos import write_animation_gif
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "preview.mp4"
+            writer = cv2.VideoWriter(str(source), cv2.VideoWriter_fourcc(*"mp4v"), 29.97, (640, 360))
+            self.assertTrue(writer.isOpened())
+            try:
+                for index in range(61):
+                    frame = np.zeros((360, 640, 3), dtype=np.uint8)
+                    frame[:, :, 2] = 100 + index * 2
+                    writer.write(frame)
+            finally:
+                writer.release()
+            target = write_animation_gif(source, root / "output" / "mixamo_character.gif")
+            with Image.open(target) as gif:
+                self.assertEqual(gif.size, (480, 270))
+                self.assertEqual(gif.info["loop"], 0)
+                self.assertEqual(gif.n_frames, 31)
+                duration = sum(frame.info["duration"] for frame in ImageSequence.Iterator(gif))
+                self.assertLessEqual(abs(duration - 61 / 29.97 * 1000), 10)
+                gif.seek(0)
+                red, green, blue = gif.convert("RGB").getpixel((100, 100))
+                self.assertGreater(red, blue + 50)
+
     def test_included_default_preserves_red_appearance_and_finger_rig(self):
         from motion2mixamorig.mixamo.gltf import write_glb
         from motion2mixamorig.mixamo.skinned_mesh import load_character_asset

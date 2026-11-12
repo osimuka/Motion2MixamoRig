@@ -11,6 +11,8 @@ vertically so that vertex lands on y = 0. A plant holds the offset of its
 lowest frame, so the sole can lift during the step but does not sink.
 Airborne frames blend from the previous plant to the next, which keeps a
 jump's height and removes the slow drift between steps.
+Without detected contacts, one constant offset lands the clip's lowest sole
+on the floor, preserving vertical motion. This also handles a single pose.
 """
 
 from __future__ import annotations
@@ -103,6 +105,8 @@ that puts the lowest frame of that contact on the floor, so the sole can
 lift during the step but does not sink through it. Airborne frames blend
 from the previous plant to the next; the clip before the first plant and
 after the last holds still.
+Without a detected support segment, use one offset for the lowest sole over
+the clip so vertical motion is unchanged.
     """
     n = len(heights_m)
     raw = np.full(n, np.nan)
@@ -118,6 +122,9 @@ after the last holds still.
     delta = np.zeros(n)
     segs = segments(supported)
     if not segs:
+        finite = heights_m[np.isfinite(heights_m)]
+        if finite.size:
+            delta[:] = -float(finite.min())
         return delta
     for start, end in segs:
         delta[start:end] = float(np.max(raw[start:end]))
@@ -133,10 +140,14 @@ after the last holds still.
     return delta
 
 
-def plant_soles(anim, mapping, asset: YBotAsset, contact: np.ndarray) -> dict:
+def plant_soles(anim, mapping, asset: YBotAsset, contact: np.ndarray | None = None) -> dict | None:
     """Shift both hip tracks so the planted sole sits on y = 0. Rotations stay."""
     soles = _sole_vertices(asset)
     heights = sole_heights_m(asset, anim.r_anim_rig, anim.hips_cm_rig, soles)
+    if not np.any(np.isfinite(heights)):
+        return None
+    if contact is None:
+        contact = np.zeros_like(heights)
     delta_m = support_delta_m(heights, np.asarray(contact, dtype=np.float64), float(anim.fps))
     delta_cm = delta_m / asset.rig.meters_per_unit
     align = mapping.r_world_align

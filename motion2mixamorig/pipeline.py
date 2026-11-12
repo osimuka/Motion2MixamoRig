@@ -44,7 +44,7 @@ from .mixamo.tpose_calibration import load_calibration
 from .mixamo.ybot_retarget import build_mapping
 from .progress import ProgressWriter
 from .run_report import write_failed_report, write_run_json
-from .videos import render_run_images, render_run_videos
+from .videos import render_run_images, render_run_videos, write_animation_gif
 
 ROTATION_CONVENTION = (
     "Animation-channel rotations are rest-relative deltas: M_local = T_bind * R_bind * R_anim, "
@@ -298,6 +298,13 @@ def run_pipeline(
                     verbose=verbose,
                 )
                 outputs["videos"] = {k: f"videos/{v.name}" for k, v in previews.items()}
+
+            gif_source = previews[
+                "before_after_360_compare" if image is not None else "mixamo_character"
+            ]
+            gif_path = write_animation_gif(gif_source, run_dir / "mixamo_character.gif")
+            outputs["mixamo_character_gif"] = gif_path.name
+            print(f"saved {gif_path}")
 
         report = {
             "status": "completed",

@@ -1,11 +1,12 @@
 [project]
 name = "motion2mixamorig"
-version = "0.1.8"
+version = "0.1.9"
 description = "Retarget human motion from video or a still pose to an Adobe Mixamo-rigged 3D character."
 requires-python = ">=3.11"
 dependencies = [
     "numpy",
     "opencv-python",
+    "Pillow",
     "einops",
     "scipy",  # nearest-surface search in `m2mr diagnose` (also pulled in by gvhmr)
     # Optional finger pass (`--detect-hands`): HaMeR + MANO. Not imported

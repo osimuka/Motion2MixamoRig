@@ -98,6 +98,50 @@ def video_size(video: Path) -> tuple[int, int]:
     return w, h
 
 
+def write_animation_gif(video: Path, out_path: Path) -> Path:
+    """Convert a rendered preview to a looping, silent GIF at up to 15 fps."""
+    import cv2
+    from PIL import Image
+
+    cap = cv2.VideoCapture(str(video))
+    frames = []
+    durations = []
+    try:
+        if not cap.isOpened():
+            raise RuntimeError(f"Cannot open video: {video}")
+        fps = float(cap.get(cv2.CAP_PROP_FPS))
+        if not np.isfinite(fps) or fps <= 0:
+            raise ValueError(f"Invalid frame rate for {video}: {fps}")
+        stride = max(1, int(np.ceil(fps / 15.0)))
+        frame_count = 0
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            if frame_count % stride == 0:
+                image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                image.thumbnail((480, 480), Image.Resampling.LANCZOS)
+                frames.append(image.quantize(colors=128))
+            frame_count += 1
+        if not frames:
+            raise RuntimeError(f"No frames in video: {video}")
+        for start in range(0, frame_count, stride):
+            end = min(start + stride, frame_count)
+            duration = round(end / fps * 100) - round(start / fps * 100)
+            durations.append(max(1, duration) * 10)
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        frames[0].save(
+            out_path, save_all=True, append_images=frames[1:],
+            duration=durations, loop=0, disposal=2, optimize=False,
+        )
+    finally:
+        cap.release()
+        for frame in frames:
+            frame.close()
+    return out_path
+
+
 def image_size(image: Path) -> tuple[int, int]:
     import cv2
 
@@ -266,7 +310,7 @@ def _setup_view(anim: RetargetedAnimation, asset, calibration, width: int, heigh
     del mesh_pts
     hips = np.stack([anim.mixamo_pos[i]["mixamorig:Hips"] for i in range(anim.n)])
     ground = Ground(
-        y=float(np.percentile(soles, FLOOR_PERCENTILE)),
+        y=0.0 if anim.ground is not None else float(np.percentile(soles, FLOOR_PERCENTILE)),
         cx=float(np.median(hips[:, 0])),
         cz=float(np.median(hips[:, 2])),
     )
@@ -461,7 +505,7 @@ def render_orbit_compare(
     dist = _fit_orbit_distance(axes, mesh_pts, target, width, height)
     hips = anim.mixamo_pos[i]["mixamorig:Hips"]
     ground = Ground(
-        y=float(np.percentile(mesh_pts[:, 1], FLOOR_PERCENTILE)),
+        y=0.0 if anim.ground is not None else float(mesh_pts[:, 1].min()),
         cx=float(hips[0]),
         cz=float(hips[2]),
     )

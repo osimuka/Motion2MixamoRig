@@ -1,6 +1,7 @@
 # SAM-only inference environment; GVHMR/SMPL-X/HaMeR are not installed.
 numpy>=1.26,<2
 opencv-python>=4.8,<4.12
+Pillow
 scipy
 einops
 timm
