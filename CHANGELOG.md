@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-11-12
+
+### Fixed
+
+- Hugging Face Space jobs now render previews and include `mixamo_character.gif` at the root of the downloadable result ZIP.
+
 ## [0.1.9] - 2026-11-12
 
 ### Added

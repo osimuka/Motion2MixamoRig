@@ -37,6 +37,7 @@ VIDEO_SUFFIXES = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 BUNDLE_FILES = (
     "mixamo_character.glb",
+    "mixamo_character.gif",
     "mixamo_rotations.npz",
     "skeleton_motion.npz",
     "diagnostics.json",
@@ -152,7 +153,7 @@ def generate(
                     verbose=False,
                     output_dir=run_dir,
                     progress=SpaceProgressWriter(progress),
-                    no_preview=True,
+                    no_preview=False,
                 )
             except Exception as exc:
                 LOGGER.exception("Motion2MixamoRig generation failed")
@@ -161,7 +162,7 @@ def generate(
 
             archive = _zip_outputs(run_dir)
             return (
-                f"Finished on {device.upper()}. The ZIP contains the GLB and available "
+                f"Finished on {device.upper()}. The ZIP contains the GLB, GIF preview, and available "
                 "motion/diagnostics files. Uploaded inputs and intermediate run files "
                 "are discarded after this job. SAM uses camera-aligned motion: "
                 "camera movement is not removed and spine joints are approximated. "

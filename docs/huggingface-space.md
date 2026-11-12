@@ -10,7 +10,8 @@ uses an original, built-in blue low-poly mannequin with a Mixamo-compatible
 skeleton and T-pose bind pose.
 No Adobe character is bundled or downloaded. Uploaded characters take
 precedence; an invalid upload reports an error instead of silently switching
-to the mannequin. It produces a ZIP containing `mixamo_character.glb` and the available
+to the mannequin. It produces a ZIP containing `mixamo_character.glb`, a looping
+`mixamo_character.gif` preview, and the available
 motion/diagnostics files. The Space uses **SAM 3D Body**, not GVHMR: no SMPL-X
 or MANO file is required. Input files and intermediate run data are temporary;
 the ZIP is eligible for Gradio cache cleanup after 24 hours.
@@ -141,6 +142,9 @@ deployment. The uploader itself still accepts only binary FBX, not GLB.
      Blender's **File → Import → glTF 2.0**, or copy it into a Godot 4 project.
      See the [Godot guide](godot.md) for playback and vertex-color materials.
    - `mixamo_rotations.npz`: per-bone quaternion rotations, wxyz convention.
+   - `mixamo_character.gif`: looping character animation for a video, or the
+     turntable comparison for a still. Silent, up to 15 fps, within 480 x 480
+     pixels. Preview rendering adds processing time to each job.
    - `skeleton_motion.npz`: extracted 24-joint motion and timing.
    - `diagnostics.json`: automatic self-intersection quality report, when
      successfully generated. Frames are numbered from zero.

@@ -7,6 +7,7 @@ import io
 import json
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -253,10 +254,12 @@ class MannequinTests(unittest.TestCase):
                     self.assertEqual(kwargs["detect_hands"], custom)
                     self.assertEqual(kwargs["hand_smooth_s"], 0.12)
                     self.assertEqual(kwargs["track_person"], configured)
+                    self.assertFalse(kwargs["no_preview"])
                     captured.append(chosen_rig)
                     out = kwargs["output_dir"]
                     out.mkdir()
                     (out / "mixamo_character.glb").write_bytes(b"test")
+                    (out / "mixamo_character.gif").write_bytes(b"GIF89a")
                     (out / "diagnostics.json").write_text("{}")
                     return out
 
@@ -281,6 +284,9 @@ class MannequinTests(unittest.TestCase):
                 self.assertIn("diagnostics.json", status)
                 self.assertEqual("Main-person tracking was enabled" in status, configured)
                 self.assertTrue(Path(archive).is_file())
+                with zipfile.ZipFile(archive) as bundle:
+                    self.assertIn("mixamo_character.gif", bundle.namelist())
+                    self.assertEqual(bundle.read("mixamo_character.gif"), b"GIF89a")
 
     def test_missing_configured_default_does_not_silently_fall_back(self):
         import app
