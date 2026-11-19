@@ -20,7 +20,7 @@ Nie musisz programować ani korzystać z terminala.
 
 ## 1. Pobierz dodatek
 
-Wejdź na stronę [najnowszego wydania](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Wejdź na stronę [najnowszego wydania](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 i pobierz zip dla swojego komputera:
 
 | Twój komputer | Plik |
@@ -115,7 +115,7 @@ z Blendera, a **Anuluj** (Cancel) przerywa zadanie.
 Dodatek jest często aktualizowany. Aby go zaktualizować:
 
 1. Pobierz najnowszy zip ze strony
-   [najnowszego wydania](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [najnowszego wydania](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → usuń stary **Motion2MixamoRig**, całkowicie zamknij
    Blendera (**Cmd+Q**), uruchom go ponownie i zainstaluj nowy zip.
 3. W panelu kliknij **Zaktualizuj środowisko** (Update Runtime).

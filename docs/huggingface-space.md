@@ -1,7 +1,7 @@
 # 4onstudios LTD — Private Hugging Face Space
 
-This 4onstudios LTD improvement fork of
-[Motion2MixamoRig](https://github.com/MaxLiu22/Motion2MixamoRig) provides a
+The 4onstudios LTD
+[Motion2MixamoRig](https://github.com/osimuka/Motion2MixamoRig) motion capture pipeline provides a
 browser UI for one-person video or still-image input and an optional Mixamo
 character FBX. Without a character upload it uses the Space's **Default
 Mannequin**. The owner's red model is included in the repository and can be

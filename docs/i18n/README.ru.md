@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#требования"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.ru.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@
 
 ### 🎨 В Blender — без программирования
 
-1. Скачайте zip для своей платформы, например `motion2mixamorig-<version>-macos-arm64.zip`, из [последнего релиза](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. Скачайте zip для своей платформы, например `motion2mixamorig-<version>-macos-arm64.zip`, из [последнего релиза](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. В Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, выберите zip.
 3. 3D Viewport → нажмите **N** → вкладка **Motion2MixamoRig** → **Установить среду (в один клик)** (Install Runtime (one click)).
 4. **Выбрать модель SMPL-X…** (Choose SMPL-X Model…) (бесплатная загрузка) и выберите FBX персонажа Mixamo.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. После клонирования создайте виртуальное окружение и установите зависимости; команда `m2mr` станет доступна:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ images/
 ## Контакты
 
 Если возникла проблема, нужна помощь с локальной установкой или вы хотите обсудить сотрудничество, напишите на:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

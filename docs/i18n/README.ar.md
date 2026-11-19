@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#المتطلبات"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.ar.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@
 
 ### 🎨 داخل Blender — دون برمجة
 
-1. نزّل ملف zip الخاص بمنصتك، مثل `motion2mixamorig-<version>-macos-arm64.zip`، من [أحدث إصدار](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. نزّل ملف zip الخاص بمنصتك، مثل `motion2mixamorig-<version>-macos-arm64.zip`، من [أحدث إصدار](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. في Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**، واختر ملف zip.
 3. 3D Viewport → اضغط **N** → تبويب **Motion2MixamoRig** → **تثبيت بيئة التشغيل (بنقرة واحدة)** (Install Runtime (one click)).
 4. **اختر نموذج SMPL-X…** (Choose SMPL-X Model…) (تنزيل مجاني)، واختر ملف FBX لشخصية Mixamo.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 يلزم توفر Python 3.11+. بعد الاستنساخ، أنشئ بيئة افتراضية وثبّت الاعتماديات؛ يصبح أمر `m2mr` متاحًا بعد ذلك:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ images/
 ## التواصل
 
 إن واجهت مشكلة، أو احتجت إلى مساعدة لإكمال الإعداد المحلي، أو رغبت في الحديث عن التعاون، يُرجى المراسلة على:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

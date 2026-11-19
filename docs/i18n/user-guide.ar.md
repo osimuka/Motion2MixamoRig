@@ -20,7 +20,7 @@
 
 ## 1. نزّل الإضافة
 
-افتح [أحدث إصدار](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+افتح [أحدث إصدار](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 ونزّل ملف zip المناسب لجهازك:
 
 | جهازك | الملف |
@@ -113,7 +113,7 @@ SMPL-X نموذج جسم مجاني تحتاج إليه الإضافة. رخصت
 تُحدَّث الإضافة كثيرًا. للتحديث:
 
 1. نزّل أحدث ملف zip من
-   [أحدث إصدار](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [أحدث إصدار](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → أزل **Motion2MixamoRig** القديمة، وأغلق Blender
    كليًا (**Cmd+Q**)، ثم أعد فتحه وثبّت ملف zip الجديد.
 3. في اللوحة، انقر **تحديث بيئة التشغيل** (Update Runtime).

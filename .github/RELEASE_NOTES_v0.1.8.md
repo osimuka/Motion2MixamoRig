@@ -23,7 +23,7 @@ This release checks the finished character for self-intersection, can drive the 
 
 1. Download `motion2mixamorig-0.1.8-macos-arm64.zip` from the assets below (do not unzip it). This release has a macOS (Apple Silicon) build only. A Windows build is coming soon.
 2. In Blender 4.2+: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**
-3. Follow the [User Guide](https://github.com/MaxLiu22/Motion2MixamoRig/blob/v0.1.8/docs/user-guide.md).
+3. Follow the [User Guide](https://github.com/osimuka/Motion2MixamoRig/blob/main/docs/user-guide.md).
 
 Updating from v0.1.7: remove the old add-on, quit Blender fully, install this zip, then click **Update Runtime**. Downloaded models are kept. The new checks, the finger pass, and the foot pin live in the runtime, so this step is required.
 
@@ -33,5 +33,3 @@ Updating from v0.1.7: remove the old add-on, quit Blender fully, install this zi
 * Input currently supports one clearly visible, full-body person.
 * The SMPL-X body model and the Mixamo character must be obtained separately under their respective licenses. `--detect-hands` also needs the MANO right-hand model.
 * Non-commercial use only, because of upstream model licenses (see `NOTICE.md`).
-
-Full changelog: [v0.1.7...v0.1.8](https://github.com/MaxLiu22/Motion2MixamoRig/compare/v0.1.7...v0.1.8)

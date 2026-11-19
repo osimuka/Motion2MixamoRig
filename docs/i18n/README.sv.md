@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#förutsättningar"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.sv.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@ För spelutvecklare: ge den en actionvideo med **en enda person** (eller ett fot
 
 ### 🎨 I Blender — utan att programmera
 
-1. Ladda ner zip-filen för din plattform, till exempel `motion2mixamorig-<version>-macos-arm64.zip`, från [senaste utgåvan](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. Ladda ner zip-filen för din plattform, till exempel `motion2mixamorig-<version>-macos-arm64.zip`, från [senaste utgåvan](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. I Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, välj zip-filen.
 3. 3D Viewport → tryck **N** → fliken **Motion2MixamoRig** → **Installera körningsmiljön (ett klick)** (Install Runtime (one click)).
 4. **Välj SMPL-X-modell…** (Choose SMPL-X Model…) (gratis nedladdning) och välj en FBX med en Mixamo-karaktär.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. Efter klonen skapar du en virtualenv och installerar beroendena. Då finns kommandot `m2mr`:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ Koden i det här arkivet är Apache-2.0. Tillgångarna du laddar ner har egna vi
 ## Kontakt
 
 Om du stöter på ett problem, behöver hjälp att bli klar med en lokal installation eller vill prata om ett samarbete, mejla:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

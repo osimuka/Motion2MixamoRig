@@ -20,7 +20,7 @@
 
 ## 1. 下載外掛
 
-前往[最新版本](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)，
+前往[最新版本](https://github.com/osimuka/Motion2MixamoRig/releases/latest)，
 下載適合你電腦的 zip：
 
 | 你的電腦 | 檔案 |
@@ -110,7 +110,7 @@ SMPL-X 是外掛需要的一個免費人體模型。它的授權不允許我們�
 
 外掛會經常更新。更新方式：
 
-1. 從[最新版本](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+1. 從[最新版本](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
    下載最新的 zip。
 2. **Get Extensions** → 移除舊的 **Motion2MixamoRig**，完全結束 Blender
    （**Cmd+Q**），重新開啟後安裝新的 zip。

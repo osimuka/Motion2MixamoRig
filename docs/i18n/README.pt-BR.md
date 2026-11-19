@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#pré-requisitos"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.pt-BR.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@ Para quem desenvolve jogos: passe um vídeo de ação com **uma só pessoa** (ou
 
 ### 🎨 No Blender — sem programar
 
-1. Baixe o zip da sua plataforma, por exemplo `motion2mixamorig-<version>-macos-arm64.zip`, na [última release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. Baixe o zip da sua plataforma, por exemplo `motion2mixamorig-<version>-macos-arm64.zip`, na [última release](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. No Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, escolha o zip.
 3. 3D Viewport → pressione **N** → aba **Motion2MixamoRig** → **Instalar o ambiente (um clique)** (Install Runtime (one click)).
 4. **Escolher o modelo SMPL-X…** (Choose SMPL-X Model…) (download gratuito) e escolha um FBX de personagem Mixamo.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. Depois do clone, crie um virtualenv e instale as dependências; o comando `m2mr` fica disponível:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ O código deste repositório é Apache-2.0. Os assets que você baixa têm termo
 ## Contato
 
 Se encontrar um problema, precisar de ajuda para terminar uma instalação local ou quiser falar de uma colaboração, escreva para:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

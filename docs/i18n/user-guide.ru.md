@@ -20,7 +20,7 @@
 
 ## 1. Скачайте аддон
 
-Откройте [последний релиз](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Откройте [последний релиз](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 и скачайте zip для своего компьютера:
 
 | Ваш компьютер | Файл |
@@ -116,7 +116,7 @@ SMPL-X — бесплатная модель тела, которая нужна
 Аддон обновляется часто. Чтобы обновить:
 
 1. Скачайте новейший zip из
-   [последнего релиза](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [последнего релиза](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → удалите старый **Motion2MixamoRig**, полностью закройте
    Blender (**Cmd+Q**), откройте снова и установите новый zip.
 3. На панели нажмите **Обновить среду** (Update Runtime).

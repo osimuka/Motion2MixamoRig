@@ -4,7 +4,7 @@ A Blender **4.2+** add-on that runs Motion2MixamoRig in a **separate Python**,
 then imports the generated Mixamo character (`.glb`) into the scene.
 
 > **Just want to use it?** Download the zip from the
-> [latest release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+> [latest release](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 > and follow the [User Guide](../docs/user-guide.md). This page is for building
 > the add-on from source and for running it against your own Python.
 

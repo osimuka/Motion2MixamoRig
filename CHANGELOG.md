@@ -58,7 +58,7 @@ Tested on macOS (Apple Silicon) only; Windows and Linux are untested.
 
 ### Added
 
-- Mixamo character FBXs re-exported from Cinema 4D are supported: the rest pose comes from the FBX bind matrices (`Pose`, then skin-cluster `TransformLink`, then local transforms) instead of `PreRotation` alone. See `docs/c4d-fbx-support.md`. Contributed by [@yng47](https://github.com/yng47) in [#8](https://github.com/MaxLiu22/Motion2MixamoRig/issues/8).
+- Mixamo character FBXs re-exported from Cinema 4D are supported: the rest pose comes from the FBX bind matrices (`Pose`, then skin-cluster `TransformLink`, then local transforms) instead of `PreRotation` alone. See `docs/c4d-fbx-support.md`. Contributed by [@yng47](https://github.com/yng47).
 - The user guide and the README quick start are available in all 18 README languages.
 
 ### Changed
@@ -67,7 +67,7 @@ Tested on macOS (Apple Silicon) only; Windows and Linux are untested.
 
 ### Fixed
 
-- GLB export reused the first mesh's inverse-bind matrices for every mesh piece, which could separate or collapse a character whose pieces have different bind matrices. Contributed by [@yng47](https://github.com/yng47) in [#8](https://github.com/MaxLiu22/Motion2MixamoRig/issues/8).
+- GLB export reused the first mesh's inverse-bind matrices for every mesh piece, which could separate or collapse a character whose pieces have different bind matrices. Contributed by [@yng47](https://github.com/yng47).
 - `rest_skin_error_cm` compares in the same coordinate space as the skinned result, so it no longer reports a false error for meshes with their own bind transform.
 
 ## [0.1.6] - 2026-10-17
@@ -116,6 +116,6 @@ Tested on macOS (Apple Silicon) only; Windows and Linux are untested.
 - Validate dependencies and user-provided assets with `m2mr doctor`.
 - Select CPU, CUDA, or Apple Silicon MPS for motion extraction.
 
-[Unreleased]: https://github.com/MaxLiu22/Motion2MixamoRig/compare/v0.1.5...HEAD
-[0.1.5]: https://github.com/MaxLiu22/Motion2MixamoRig/compare/v0.1.0...v0.1.5
-[0.1.0]: https://github.com/MaxLiu22/Motion2MixamoRig/releases/tag/v0.1.0
+[Unreleased]: https://github.com/osimuka/Motion2MixamoRig/compare/v0.1.10...HEAD
+[0.1.10]: https://github.com/osimuka/Motion2MixamoRig/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/osimuka/Motion2MixamoRig/releases/tag/v0.1.9

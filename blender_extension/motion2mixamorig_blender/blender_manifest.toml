@@ -4,15 +4,15 @@ id = "motion2mixamorig"
 version = "0.1.10"
 name = "Motion2MixamoRig"
 tagline = "Transfer human motion from video to Mixamo characters"
-maintainer = "Max Liu"
+maintainer = "4onstudios LTD <support@4onstudios.com>"
 type = "add-on"
 
-website = "https://github.com/MaxLiu22/Motion2MixamoRig"
+website = "https://github.com/osimuka/Motion2MixamoRig"
 tags = ["Animation", "Import-Export"]
 blender_version_min = "4.2.0"
 
 license = ["SPDX:Apache-2.0"]
-copyright = ["2026 Max Liu"]
+copyright = ["2026 4onstudios LTD"]
 
 [permissions]
 files = "Read inputs and write job logs and generated GLB files"

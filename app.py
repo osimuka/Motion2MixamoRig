@@ -1,4 +1,4 @@
-"""Private Hugging Face Space UI for the 4onstudios LTD improvement fork."""
+"""Private Hugging Face Space UI for the 4onstudios LTD Motion2MixamoRig pipeline."""
 
 from __future__ import annotations
 
@@ -193,7 +193,7 @@ with gr.Blocks(delete_cache=(86400, 86400), title="4onstudios LTD") as demo:
     gr.Markdown(
         """
 # 4onstudios LTD
-### Motion2MixamoRig improvement fork
+### Motion2MixamoRig open-source motion capture pipeline
 Generate an animated Mixamo character (`.glb`) from a single-person video or still pose.
 Character upload is optional: leave it empty to animate the Space's default
 T-pose mannequin, or upload your own Mixamo-rigged binary FBX.

@@ -10,12 +10,12 @@ license: other
 
 # 4onstudios LTD
 
-**An improvement fork of [Motion2MixamoRig](https://github.com/MaxLiu22/Motion2MixamoRig), maintained by 4onstudios LTD.**
+**An open-source motion capture pipeline by 4onstudios LTD, inspired by [the original Motion2MixamoRig project](https://github.com/MaxLiu22/Motion2MixamoRig).**
 
 <p align="center">
   <a href="#prerequisites"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="docs/user-guide.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](docs/assets/repo_poster.png)
@@ -34,7 +34,7 @@ For game developers: give it a **single-person** action video (or a still) and a
 
 ### 🎨 In Blender — no coding
 
-1. Download the zip for your platform, e.g. `motion2mixamorig-<version>-macos-arm64.zip`, from the [latest release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. Download the zip for your platform, e.g. `motion2mixamorig-<version>-macos-arm64.zip`, from the [latest release](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. In Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, pick the zip.
 3. 3D Viewport → press **N** → **Motion2MixamoRig** tab → **Install Runtime (one click)**.
 4. **Choose SMPL-X Model…** (a free download) and pick a Mixamo character FBX.
@@ -95,7 +95,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. After cloning, create a virtualenv and install dependencies; the `m2mr` command is then available:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -310,14 +310,14 @@ This repository's code is Apache-2.0. The assets you download have their own ter
 ## Contact
 
 If you run into a problem, need help finishing a local setup, or would like to talk about working together, email:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

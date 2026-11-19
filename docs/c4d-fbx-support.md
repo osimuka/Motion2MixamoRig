@@ -6,8 +6,7 @@ transforms). Pass the file wherever a Mixamo rig is expected — `--rig`, or
 **Mixamo Rig FBX** in the Blender add-on. It does not need to be re-saved in
 Blender first.
 
-Contributed by [@yng47](https://github.com/yng47) in
-[#8](https://github.com/MaxLiu22/Motion2MixamoRig/issues/8).
+Contributed by [@yng47](https://github.com/yng47).
 
 ## What changed
 

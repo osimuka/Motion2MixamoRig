@@ -5,6 +5,9 @@ on the following upstream components, each governed by its own terms. None of
 their gated assets are redistributed here; users obtain them directly from the
 sources below.
 
+Portions of this code are derived from an earlier Apache-2.0 release of
+Motion2MixamoRig, Copyright 2026 Max Liu, used under the Apache License 2.0.
+
 ## GVHMR
 
 World-Grounded Human Motion Recovery via Gravity-View Coordinates

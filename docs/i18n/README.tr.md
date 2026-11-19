@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#gereksinimler"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.tr.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@ Oyun geliştiricileri için: **tek kişilik** bir aksiyon videosu (ya da bir fot
 
 ### 🎨 Blender'da — kod yazmadan
 
-1. Platformunuza uygun zip dosyasını, örneğin `motion2mixamorig-<version>-macos-arm64.zip`, [en son sürüm](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest) sayfasından indirin.
+1. Platformunuza uygun zip dosyasını, örneğin `motion2mixamorig-<version>-macos-arm64.zip`, [en son sürüm](https://github.com/osimuka/Motion2MixamoRig/releases/latest) sayfasından indirin.
 2. Blender'da: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…** ile zip dosyasını seçin.
 3. 3D Viewport → **N** tuşuna basın → **Motion2MixamoRig** sekmesi → **Çalışma Ortamını Kur (tek tık)** (Install Runtime (one click)).
 4. **SMPL-X Modeli Seç…** (Choose SMPL-X Model…) (ücretsiz indirme) ve bir Mixamo karakter FBX dosyası seçin.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. Klonladıktan sonra bir virtualenv oluşturun ve bağımlılıkları kurun; ardından `m2mr` komutu kullanılabilir olur:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ Bu deponun kodu Apache-2.0 lisanslıdır. Kendi indirdiğiniz varlıkların kend
 ## İletişim
 
 Bir sorunla karşılaşırsanız, yerel kurulumu tamamlamak için yardıma ihtiyacınız olursa ya da iş birliği hakkında konuşmak isterseniz şu adrese e-posta gönderin:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

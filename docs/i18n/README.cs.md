@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#požadavky"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.cs.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@ Pro vývojáře her: dejte mu akční video s **jednou osobou** (nebo fotografii
 
 ### 🎨 V Blenderu — bez programování
 
-1. Stáhněte zip pro svou platformu, například `motion2mixamorig-<version>-macos-arm64.zip`, z [nejnovějšího vydání](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. Stáhněte zip pro svou platformu, například `motion2mixamorig-<version>-macos-arm64.zip`, z [nejnovějšího vydání](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. V Blenderu: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, vyberte zip.
 3. 3D Viewport → stiskněte **N** → karta **Motion2MixamoRig** → **Nainstalovat prostředí (jedním kliknutím)** (Install Runtime (one click)).
 4. **Vybrat model SMPL-X…** (Choose SMPL-X Model…) (stažení zdarma) a vyberte FBX postavy Mixamo.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. Po naklonování vytvořte virtualenv a nainstalujte závislosti; příkaz `m2mr` je pak k dispozici:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ Kód tohoto repozitáře je Apache-2.0. Assety, které stahujete, mají vlastní
 ## Kontakt
 
 Když narazíte na problém, potřebujete pomoct s místní instalací nebo chcete mluvit o spolupráci, napište na:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

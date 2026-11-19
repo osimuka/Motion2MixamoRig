@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#mga-kailangan"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.fil.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@ Para sa mga game developer: bigyan ito ng action video na may **iisang tao** (o 
 
 ### 🎨 Sa Blender — walang coding
 
-1. I-download ang zip para sa platform mo, hal. `motion2mixamorig-<version>-macos-arm64.zip`, mula sa [latest release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. I-download ang zip para sa platform mo, hal. `motion2mixamorig-<version>-macos-arm64.zip`, mula sa [latest release](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. Sa Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, piliin ang zip.
 3. 3D Viewport → pindutin ang **N** → **Motion2MixamoRig** tab → **I-install ang Runtime (isang click)** (Install Runtime (one click)).
 4. **Pumili ng SMPL-X Model…** (Choose SMPL-X Model…) (libreng download) at pumili ng Mixamo character FBX.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. Pagkatapos i-clone, gumawa ng virtualenv at i-install ang mga dependency; magagamit na pagkatapos ang command na `m2mr`:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ Apache-2.0 ang code ng repository na ito. May sariling mga tuntunin ang mga asse
 ## Contact
 
 Kung may problema ka, kailangan mo ng tulong para matapos ang local setup, o gusto mong pag-usapan ang pakikipagtulungan, mag-email sa:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

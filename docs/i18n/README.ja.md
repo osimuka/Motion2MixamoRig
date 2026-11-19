@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#事前準備"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.ja.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@
 
 ### 🎨 Blender で使う — コーディング不要
 
-1. [最新リリース](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)から、お使いのプラットフォーム用の zip（例：`motion2mixamorig-<version>-macos-arm64.zip`）をダウンロードします。
+1. [最新リリース](https://github.com/osimuka/Motion2MixamoRig/releases/latest)から、お使いのプラットフォーム用の zip（例：`motion2mixamorig-<version>-macos-arm64.zip`）をダウンロードします。
 2. Blender で **Edit → Preferences → Get Extensions → ∨ → Install from Disk…** を開き、zip を選びます。
 3. 3D Viewport → **N** を押す → **Motion2MixamoRig** タブ → **ランタイムをインストール（ワンクリック）**（Install Runtime (one click)）。
 4. **SMPL-X モデルを選択…**（Choose SMPL-X Model…）（無料でダウンロード可能）し、Mixamo キャラクターの FBX を選びます。
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+ が必要です。クローン後に仮想環境を作り依存関係を入れると、`m2mr` が使えます：
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ images/
 ## 連絡先
 
 ご不明点がある場合、ローカル環境の構築でお手伝いが必要な場合、または協業をご相談したい場合は、メールでご連絡ください：
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

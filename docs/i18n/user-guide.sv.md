@@ -20,7 +20,7 @@ Ingen programmering och ingen terminal behövs.
 
 ## 1. Ladda ner tillägget
 
-Gå till [senaste utgåvan](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Gå till [senaste utgåvan](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 och ladda ner zip-filen för din dator:
 
 | Din dator | Fil |
@@ -123,7 +123,7 @@ stoppar jobbet.
 Tillägget uppdateras ofta. Så här uppdaterar du:
 
 1. Ladda ner den nyaste zip-filen från
-   [senaste utgåvan](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [senaste utgåvan](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → ta bort den gamla **Motion2MixamoRig**, avsluta Blender
    helt (**Cmd+Q**), öppna igen och installera den nya zip-filen.
 3. I panelen klickar du på **Uppdatera körningsmiljön** (Update Runtime).

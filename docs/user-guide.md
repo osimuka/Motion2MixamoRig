@@ -20,7 +20,7 @@ No coding or terminal needed.
 
 ## 1. Download the add-on
 
-Go to the [latest release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Go to the [latest release](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 and download the zip for your computer:
 
 | Your computer | File |
@@ -121,7 +121,7 @@ After that, the video is processed on your computer. On a Mac CPU, a
 The add-on is updated often. To update:
 
 1. Download the newest zip from the
-   [latest release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [latest release](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → remove the old **Motion2MixamoRig**, quit Blender
    fully (**Cmd+Q**), reopen, and install the new zip.
 3. In the panel, click **Update Runtime**.

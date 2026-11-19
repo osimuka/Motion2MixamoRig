@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#yêu-cầu"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.vi.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@ Dành cho nhà phát triển game: đưa vào một video hành động có **m�
 
 ### 🎨 Trong Blender — không cần lập trình
 
-1. Tải tệp zip cho nền tảng của bạn, ví dụ `motion2mixamorig-<version>-macos-arm64.zip`, từ [bản phát hành mới nhất](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. Tải tệp zip cho nền tảng của bạn, ví dụ `motion2mixamorig-<version>-macos-arm64.zip`, từ [bản phát hành mới nhất](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. Trong Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, chọn tệp zip.
 3. 3D Viewport → nhấn **N** → tab **Motion2MixamoRig** → **Cài runtime (một cú nhấp)** (Install Runtime (one click)).
 4. **Chọn mô hình SMPL-X…** (Choose SMPL-X Model…) (tải miễn phí) và chọn một tệp FBX nhân vật Mixamo.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. Sau khi clone, hãy tạo virtualenv và cài các phụ thuộc; khi đó lệnh `m2mr` sẽ dùng được:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ Mã nguồn của kho này theo giấy phép Apache-2.0. Các tài nguyên bạn
 ## Liên hệ
 
 Nếu bạn gặp vấn đề, cần hỗ trợ hoàn tất cài đặt cục bộ, hoặc muốn trao đổi về hợp tác, hãy gửi email tới:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

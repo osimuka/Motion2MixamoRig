@@ -20,7 +20,7 @@
 
 ## 1. 下载插件
 
-打开[最新版本](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)，
+打开[最新版本](https://github.com/osimuka/Motion2MixamoRig/releases/latest)，
 下载适合你电脑的 zip：
 
 | 你的电脑 | 文件 |
@@ -112,7 +112,7 @@ SMPL-X 是插件需要的一个免费人体模型。它的许可证不允许我�
 
 插件更新很频繁。更新方法：
 
-1. 从[最新版本](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+1. 从[最新版本](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
    下载最新的 zip。
 2. **Get Extensions** → 移除旧的 **Motion2MixamoRig**，完全退出 Blender
    （**Cmd+Q**），重新打开，再安装新的 zip。

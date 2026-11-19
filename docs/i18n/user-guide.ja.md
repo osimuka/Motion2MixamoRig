@@ -20,7 +20,7 @@
 
 ## 1. アドオンをダウンロード
 
-[最新リリース](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)を開き、
+[最新リリース](https://github.com/osimuka/Motion2MixamoRig/releases/latest)を開き、
 お使いのコンピューター用の zip をダウンロードします：
 
 | お使いのコンピューター | ファイル |
@@ -112,7 +112,7 @@ SMPL-X はアドオンが必要とする無料のボディモデルです。ラ�
 
 アドオンは頻繁に更新されます。更新手順：
 
-1. [最新リリース](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)から
+1. [最新リリース](https://github.com/osimuka/Motion2MixamoRig/releases/latest)から
    最新の zip をダウンロードします。
 2. **Get Extensions** → 古い **Motion2MixamoRig** を削除し、Blender を完全に終了
    （**Cmd+Q**）して再起動し、新しい zip をインストールします。

@@ -20,7 +20,7 @@
 
 ## 1. एड-अन डाउनलोड गर्नुहोस्
 
-[पछिल्लो release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+[पछिल्लो release](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 मा जानुहोस् र आफ्नो कम्प्युटरका लागि zip डाउनलोड गर्नुहोस्:
 
 | तपाईंको कम्प्युटर | फाइल |
@@ -113,7 +113,7 @@ SMPL-X एड-अनलाई चाहिने निःशुल्क बड
 
 एड-अन बारम्बार अपडेट हुन्छ। अपडेट गर्न:
 
-1. [पछिल्लो release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+1. [पछिल्लो release](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
    बाट सबैभन्दा नयाँ zip डाउनलोड गर्नुहोस्।
 2. **Get Extensions** → पुरानो **Motion2MixamoRig** हटाउनुहोस्, Blender पूरै बन्द
    गर्नुहोस् (**Cmd+Q**), फेरि खोल्नुहोस्, र नयाँ zip इन्स्टल गर्नुहोस्।

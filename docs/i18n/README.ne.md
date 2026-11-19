@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#आवश्यकताहरू"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.ne.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@
 
 ### 🎨 Blender मा — कोडिङ बिना
 
-1. आफ्नो प्लेटफर्मको zip, जस्तै `motion2mixamorig-<version>-macos-arm64.zip`, [पछिल्लो release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest) बाट डाउनलोड गर्नुहोस्।
+1. आफ्नो प्लेटफर्मको zip, जस्तै `motion2mixamorig-<version>-macos-arm64.zip`, [पछिल्लो release](https://github.com/osimuka/Motion2MixamoRig/releases/latest) बाट डाउनलोड गर्नुहोस्।
 2. Blender मा: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**, अनि zip छान्नुहोस्।
 3. 3D Viewport → **N** थिच्नुहोस् → **Motion2MixamoRig** ट्याब → **रनटाइम इन्स्टल गर्नुहोस् (एक क्लिक)** (Install Runtime (one click))।
 4. **SMPL-X मोडेल छान्नुहोस्…** (Choose SMPL-X Model…) (निःशुल्क डाउनलोड), र Mixamo क्यारेक्टरको FBX छान्नुहोस्।
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+। clone गरेपछि virtualenv बनाउनुहोस् र dependency हरू इन्स्टल गर्नुहोस्; त्यसपछि `m2mr` कमान्ड प्रयोग गर्न मिल्छ:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ images/
 ## सम्पर्क
 
 कुनै समस्या आएमा, स्थानीय सेटअप पूरा गर्न सहयोग चाहिएमा, वा सहकार्यबारे कुरा गर्न चाहनुहुन्छ भने यो ठेगानामा इमेल गर्नुहोस्:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

@@ -20,7 +20,7 @@
 
 ## 1. ดาวน์โหลด add-on
 
-ไปที่ [รีลีสล่าสุด](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+ไปที่ [รีลีสล่าสุด](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 แล้วดาวน์โหลดไฟล์ zip ที่ตรงกับคอมพิวเตอร์ของคุณ:
 
 | คอมพิวเตอร์ของคุณ | ไฟล์ |
@@ -113,7 +113,7 @@ SMPL-X เป็นโมเดลร่างกายฟรีที่ add-on
 add-on มีการอัปเดตบ่อย วิธีอัปเดต:
 
 1. ดาวน์โหลดไฟล์ zip ล่าสุดจาก
-   [รีลีสล่าสุด](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+   [รีลีสล่าสุด](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 2. **Get Extensions** → ลบ **Motion2MixamoRig** ตัวเก่า ปิด Blender ให้สนิท
    (**Cmd+Q**) เปิดใหม่ แล้วติดตั้งไฟล์ zip ใหม่
 3. ในแผง คลิก **อัปเดตรันไทม์** (Update Runtime)

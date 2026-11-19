@@ -4,7 +4,7 @@ from __future__ import annotations
 
 bl_info = {
     "name": "Motion2MixamoRig",
-    "author": "Max Liu",
+    "author": "4onstudios LTD",
     "version": (0, 1, 0),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Motion2MixamoRig",

@@ -21,7 +21,7 @@ Kod yazmanız veya terminal kullanmanız gerekmez.
 
 ## 1. Eklentiyi indirin
 
-[En son sürüm](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+[En son sürüm](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 sayfasına gidin ve bilgisayarınıza uygun zip dosyasını indirin:
 
 | Bilgisayarınız | Dosya |
@@ -119,7 +119,7 @@ edebilirsiniz; **İptal** (Cancel) işi durdurur.
 Eklenti sık sık güncellenir. Güncellemek için:
 
 1. En yeni zip dosyasını
-   [en son sürüm](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest) sayfasından indirin.
+   [en son sürüm](https://github.com/osimuka/Motion2MixamoRig/releases/latest) sayfasından indirin.
 2. **Get Extensions** → eski **Motion2MixamoRig**'i kaldırın, Blender'dan
    tamamen çıkın (**Cmd+Q**), yeniden açın ve yeni zip dosyasını kurun.
 3. Panelde **Çalışma Ortamını Güncelle** (Update Runtime) düğmesine tıklayın.

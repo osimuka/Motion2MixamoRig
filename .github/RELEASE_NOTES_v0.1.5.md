@@ -10,7 +10,7 @@ Motion2MixamoRig transfers human motion from a monocular video—or a pose from 
 
 ### Install the Blender Extension
 
-Download `motion2mixamorig-0.1.5.zip` from the assets below, then in Blender 4.2+: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**. Setup and usage: [`blender_extension/README.md`](https://github.com/MaxLiu22/Motion2MixamoRig/blob/v0.1.5/blender_extension/README.md).
+Download `motion2mixamorig-0.1.5.zip` from the assets below, then in Blender 4.2+: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…**. Setup and usage: [`blender_extension/README.md`](https://github.com/osimuka/Motion2MixamoRig/blob/main/blender_extension/README.md).
 
 ### Breaking change
 
@@ -23,5 +23,3 @@ Download `motion2mixamorig-0.1.5.zip` from the assets below, then in Blender 4.2
 * The SMPL-X body model and Mixamo character must be obtained separately under their respective licenses.
 * Motion extraction and retargeting are experimental.
 * Some motions may exhibit root drift, orientation errors, foot sliding, or unstable rotations.
-
-Full changelog: [v0.1.0...v0.1.5](https://github.com/MaxLiu22/Motion2MixamoRig/compare/v0.1.0...v0.1.5)

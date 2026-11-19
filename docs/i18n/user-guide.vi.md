@@ -20,7 +20,7 @@ Không cần lập trình hay dùng terminal.
 
 ## 1. Tải add-on
 
-Vào [bản phát hành mới nhất](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Vào [bản phát hành mới nhất](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 và tải tệp zip phù hợp với máy của bạn:
 
 | Máy của bạn | Tệp |
@@ -114,7 +114,7 @@ tác vụ.
 Add-on được cập nhật thường xuyên. Để cập nhật:
 
 1. Tải tệp zip mới nhất từ
-   [bản phát hành mới nhất](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [bản phát hành mới nhất](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → gỡ **Motion2MixamoRig** cũ, thoát hẳn Blender
    (**Cmd+Q**), mở lại, rồi cài tệp zip mới.
 3. Trong bảng điều khiển, nhấp **Cập nhật runtime** (Update Runtime).

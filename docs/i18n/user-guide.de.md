@@ -20,7 +20,7 @@ Ohne Programmieren und ohne Terminal.
 
 ## 1. Add-on herunterladen
 
-Öffne das [neueste Release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Öffne das [neueste Release](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 und lade die Zip-Datei für deinen Computer herunter:
 
 | Dein Computer | Datei |
@@ -117,7 +117,7 @@ benutzbar, und **Abbrechen** (Cancel) stoppt den Auftrag.
 Das Add-on wird häufig aktualisiert. So aktualisierst du:
 
 1. Lade die neueste Zip-Datei aus dem
-   [neuesten Release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest) herunter.
+   [neuesten Release](https://github.com/osimuka/Motion2MixamoRig/releases/latest) herunter.
 2. **Get Extensions** → entferne das alte **Motion2MixamoRig**, beende Blender
    vollständig (**Cmd+Q**), öffne es wieder und installiere die neue Zip-Datei.
 3. Klicke im Panel auf **Laufzeitumgebung aktualisieren** (Update Runtime).

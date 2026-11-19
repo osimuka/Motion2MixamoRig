@@ -20,7 +20,7 @@
 
 ## 1. Завантажте додаток
 
-Перейдіть до [останнього випуску](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Перейдіть до [останнього випуску](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 і завантажте zip для свого комп’ютера:
 
 | Ваш комп’ютер | Файл |
@@ -122,7 +122,7 @@ Blender. На цю підлогу додається сітка **Позначк
 Додаток оновлюється часто. Щоб оновити:
 
 1. Завантажте найновіший zip з
-   [останнього випуску](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [останнього випуску](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → вилучіть старий **Motion2MixamoRig**, повністю закрийте
    Blender (**Cmd+Q**), відкрийте знову і встановіть новий zip.
 3. На панелі клацніть **Оновити середовище** (Update Runtime).

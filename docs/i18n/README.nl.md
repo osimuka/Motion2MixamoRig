@@ -3,7 +3,7 @@
 <p align="center">
   <a href="#vereisten"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white"></a>
   <a href="user-guide.nl.md"><img alt="Blender 4.2+" src="https://img.shields.io/badge/Blender-4.2%2B-orange?logo=blender&logoColor=white"></a>
-  <a href="https://github.com/MaxLiu22/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MaxLiu22/Motion2MixamoRig?style=social"></a>
+  <a href="https://github.com/osimuka/Motion2MixamoRig/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/osimuka/Motion2MixamoRig?style=social"></a>
 </p>
 
 ![Motion2MixamoRig](../assets/repo_poster.png)
@@ -22,7 +22,7 @@ Voor gameontwikkelaars: geef een actievideo met **één persoon** (of een foto) 
 
 ### 🎨 In Blender — zonder programmeren
 
-1. Download de zip voor je platform, bijv. `motion2mixamorig-<version>-macos-arm64.zip`, van de [nieuwste release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+1. Download de zip voor je platform, bijv. `motion2mixamorig-<version>-macos-arm64.zip`, van de [nieuwste release](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. In Blender: **Edit → Preferences → Get Extensions → ∨ → Install from Disk…** en kies de zip.
 3. 3D Viewport → druk op **N** → tabblad **Motion2MixamoRig** → **Runtime installeren (één klik)** (Install Runtime (one click)).
 4. **SMPL-X-model kiezen…** (Choose SMPL-X Model…; gratis te downloaden) en kies een FBX van een Mixamo-personage.
@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/0474ba58-dea7-4538-82a9-cbe35e437c44
 Python 3.11+. Maak na het clonen een virtualenv aan en installeer de afhankelijkheden; daarna is het commando `m2mr` beschikbaar:
 
 ```bash
-git clone https://github.com/MaxLiu22/Motion2MixamoRig.git
+git clone https://github.com/osimuka/Motion2MixamoRig.git
 cd Motion2MixamoRig
 python -m venv .venv && source .venv/bin/activate
 
@@ -246,14 +246,14 @@ De code van deze repository valt onder Apache-2.0. De assets die je zelf downloa
 ## Contact
 
 Loop je tegen een probleem aan, heb je hulp nodig bij een lokale installatie of wil je praten over samenwerking, stuur dan een e-mail naar:
-[maxliu2022sz@gmail.com](mailto:maxliu2022sz@gmail.com)
+[support@4onstudios.com](mailto:support@4onstudios.com)
 
 ## Star History
 
-<a href="https://star-history.com/#MaxLiu22/Motion2MixamoRig&Date">
+<a href="https://star-history.com/#osimuka/Motion2MixamoRig&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MaxLiu22/Motion2MixamoRig&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=osimuka/Motion2MixamoRig&type=Date" />
   </picture>
 </a>

@@ -20,7 +20,7 @@
 
 ## 1. 애드온 다운로드
 
-[최신 릴리스](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)에서
+[최신 릴리스](https://github.com/osimuka/Motion2MixamoRig/releases/latest)에서
 내 컴퓨터에 맞는 zip을 다운로드하세요.
 
 | 내 컴퓨터 | 파일 |
@@ -114,7 +114,7 @@ SMPL-X는 애드온에 필요한 무료 바디 모델입니다. 라이선스상 
 
 애드온은 자주 업데이트됩니다. 업데이트 방법:
 
-1. [최신 릴리스](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)에서
+1. [최신 릴리스](https://github.com/osimuka/Motion2MixamoRig/releases/latest)에서
    최신 zip을 다운로드합니다.
 2. **Get Extensions** → 이전 **Motion2MixamoRig**를 제거하고, Blender를 완전히
    종료(**Cmd+Q**)한 뒤 다시 열고 새 zip을 설치합니다.

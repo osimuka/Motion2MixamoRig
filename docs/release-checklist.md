@@ -36,4 +36,4 @@
 - [ ] GitHub Release is created from the tag, with the release notes and every
       platform zip attached; the notes list which platforms are included
 - [ ] Release URL opens successfully, and
-      `https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest` points to it
+      `https://github.com/osimuka/Motion2MixamoRig/releases/latest` points to it

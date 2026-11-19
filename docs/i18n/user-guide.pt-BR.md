@@ -20,7 +20,7 @@ Não precisa de programação nem de terminal.
 
 ## 1. Baixe a extensão
 
-Vá à [última release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Vá à [última release](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 e baixe o zip do seu computador:
 
 | Seu computador | Arquivo |
@@ -123,7 +123,7 @@ roda, e **Cancelar** (Cancel) interrompe o trabalho.
 A extensão é atualizada com frequência. Para atualizar:
 
 1. Baixe o zip mais recente na
-   [última release](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [última release](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → remova o **Motion2MixamoRig** antigo, feche o Blender
    por completo (**Cmd+Q**), abra de novo e instale o zip novo.
 3. No painel, clique em **Atualizar o ambiente** (Update Runtime).

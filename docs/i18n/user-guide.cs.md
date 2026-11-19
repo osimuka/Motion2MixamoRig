@@ -20,7 +20,7 @@ Programování ani terminál nepotřebujete.
 
 ## 1. Stáhněte doplněk
 
-Jděte na [nejnovější vydání](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Jděte na [nejnovější vydání](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 a stáhněte zip pro svůj počítač:
 
 | Váš počítač | Soubor |
@@ -122,7 +122,7 @@ několik minut. Blender zůstane použitelný, než to doběhne, a **Zrušit**
 Doplněk se aktualizuje často. Postup:
 
 1. Stáhněte nejnovější zip z
-   [nejnovějšího vydání](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [nejnovějšího vydání](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → odeberte starý **Motion2MixamoRig**, Blender úplně
    ukončete (**Cmd+Q**), otevřete znovu a nainstalujte nový zip.
 3. Na panelu klikněte na **Aktualizovat prostředí** (Update Runtime).

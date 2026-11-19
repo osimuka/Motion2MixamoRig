@@ -20,7 +20,7 @@ Tanpa coding dan tanpa terminal.
 
 ## 1. Unduh add-on
 
-Buka [rilis terbaru](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest)
+Buka [rilis terbaru](https://github.com/osimuka/Motion2MixamoRig/releases/latest)
 dan unduh zip untuk komputermu:
 
 | Komputermu | File |
@@ -114,7 +114,7 @@ beberapa menit. Blender tetap bisa dipakai selama proses berjalan, dan
 Add-on ini sering diperbarui. Cara update:
 
 1. Unduh zip terbaru dari
-   [rilis terbaru](https://github.com/MaxLiu22/Motion2MixamoRig/releases/latest).
+   [rilis terbaru](https://github.com/osimuka/Motion2MixamoRig/releases/latest).
 2. **Get Extensions** → hapus **Motion2MixamoRig** yang lama, tutup Blender
    sepenuhnya (**Cmd+Q**), buka lagi, lalu pasang zip yang baru.
 3. Di panel, klik **Perbarui Runtime** (Update Runtime).
