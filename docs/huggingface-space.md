@@ -14,7 +14,8 @@ to the mannequin. It produces a ZIP containing `mixamo_character.glb`, a looping
 `mixamo_character.gif` preview, and the available
 motion/diagnostics files. The Space uses **SAM 3D Body**, not GVHMR: no SMPL-X
 or MANO file is required. Input files and intermediate run data are temporary;
-the ZIP is eligible for Gradio cache cleanup after 24 hours.
+the ZIP and object-selection previews are eligible for Gradio cache cleanup
+after 24 hours.
 
 ## Verified deployment
 
@@ -199,6 +200,114 @@ python -m motion2mixamorig.cli run --set-extractor sam3d --device cuda \
 Synthetic tests cover landmark ordering, left/right chains, camera-rotation
 invariance, rotation/GLB export and skeleton reuse. Real native-hand inference
 and visual finger quality still need validation on the GPU Space.
+
+### Separate object capture (experimental)
+
+The Space can optionally reconstruct **one rigid object** from a video and
+estimate its camera-relative pose in each frame. This adds a separate object,
+not an object parented to the animated hand. It is off by default. The standard
+Dockerfile does **not** install the required models: the owner must configure
+the runtimes below before enabling it.
+
+1. Use a short, constant-frame-rate video with a fixed camera. The object
+   should be visible clearly in at least one frame. Select **Capture the
+   selected object** and enter its approximate longest dimension in
+   centimetres. Its actual scale cannot be recovered from a single image.
+2. Enter a zero-based frame number, choose **Load object frame**, then click
+   two opposite corners around the object. Click again to replace the box.
+   Reload the frame if you change the video or frame number.
+3. Generate and download the ZIP. Alongside the character files it contains:
+   - `object.glb`: separately animated mesh with a small embedded diffuse
+     texture, in Y-up camera coordinates. The texture approximates the
+     reconstructed vertex colours per face.
+   - `object_motion.npz`: `frame_indices`, `timestamps`, `fps`,
+     `camera_from_object` (object-to-OpenCV-camera 4×4 matrices, metres),
+     `camera_intrinsics`, `boxes_xyxy`, `valid`, and `convention`.
+   - `object_metadata.json`: selection, size, camera assumptions and counts
+     of estimated and missing frames.
+
+SAM 2 tracks a 2D mask, TripoSR generates a shape and colours from the selected
+frame, and MegaPose estimates 3D pose independently for each nonempty mask.
+The estimated focal length is the image diagonal, not a camera calibration.
+Empty masks are marked invalid, with zero object scale in the GLB for those
+frames; a nonempty mask or a pose is **not** a confidence guarantee. Object
+occlusion, similar objects, cuts, symmetric shapes and motion blur can cause
+drift or rotation jumps. Shape behind the object is inferred, not observed.
+
+The object is **not aligned to, or attached to, the character**: the body
+pipeline recentres, rescales and retargets the person independently. Import
+the object separately and manually align and animate/parent it as needed.
+Pickup, release, hand switching, camera-motion compensation and grip contact
+are not inferred. Inspect the result, including missing frames.
+
+SAM 2, TripoSR and MegaPose run sequentially in separate processes to avoid
+holding all three models on the GPU at once. SAM 2 offloads video/state to CPU,
+but long clips still need substantial RAM and temporary disk space. TripoSR
+reports approximately 6 GB VRAM at its default settings; **the full pipeline's
+VRAM, RAM, speed and output quality have not been measured**. An NVIDIA CUDA
+GPU and a working MegaPose offscreen renderer are required; this is not a
+CPU/Mac inference option. Real model inference on the Space/L4 has not yet
+been verified.
+
+#### Owner setup for object capture
+
+Install the following on a compatible Linux/NVIDIA host or in a **custom
+Space Docker image**. Extending the image is required for a Space; changes
+made only in a running container disappear on restart. Keep the three model
+environments separate from one another and from the Space's SAM 3D Body
+environment:
+
+1. Install [SAM 2](https://github.com/facebookresearch/sam2/blob/main/INSTALL.md)
+   at commit `2b90b9f5ceec907a1c18123530e92e794ad901a4` in a Python ≥3.10
+   environment with CUDA PyTorch, matching torchvision, NumPy and OpenCV.
+   `SAM2_BUILD_CUDA=0` is supported by upstream if its optional postprocessing
+   extension cannot be built. The app downloads the pinned
+   [SAM 2.1 Hiera Tiny weights](https://huggingface.co/facebook/sam2.1-hiera-tiny)
+   on first use.
+2. Install [TripoSR](https://github.com/VAST-AI-Research/TripoSR) at commit
+   `107cefdc244c39106fa830359024f6a2f1c78871` in a separate environment.
+   Follow upstream's CUDA/PyTorch setup and install its requirements; its
+   `torchmcubes` extension needs a compatible compiler/toolkit and may need
+   `pip install --no-build-isolation`. Install `rembg[cpu]` if the upstream
+   `rembg` import lacks `onnxruntime`, even though this integration supplies
+   its own mask and does not run background removal. The pinned
+   [TripoSR weights](https://huggingface.co/stabilityai/TripoSR) download on
+   first use.
+3. Install [MegaPose](https://github.com/megapose6d/megapose6d#installation)
+   at commit `f3b8e1247f133f3d098833a251b8f2d744c03e1f` and its submodules in
+   its own upstream conda environment. Create the data directory, set
+   `MEGAPOSE_DATA_DIR`, and run
+   `python -m megapose.scripts.download --megapose_models` in that environment.
+   Confirm the `megapose-models/coarse-rgb-906902141/` and
+   `megapose-models/refiner-rgb-653307694/` folders each contain `config.yaml`
+   and `checkpoint.pth.tar`. MegaPose's published environment uses Python 3.9
+   and older CUDA/PyTorch; its Panda3D offscreen rendering and GPU driver must
+   work on the host. A numeric `CUDA_VISIBLE_DEVICES` is required by upstream;
+   GPU UUID selection is not supported. For a nonzero CUDA device, explicitly
+   set `EGL_VISIBLE_DEVICES` to the corresponding numeric EGL device index.
+   CUDA and EGL device numbering can differ, so verify the mapping on the
+   host. When the CUDA selection is unset or starts with 0, EGL defaults to
+   0; multi-GPU use has not been verified.
+4. Ensure the Space's Python has `trimesh` (included in the current base
+   Dockerfile; for a separate installation use `pip install -e '.[objects]'`).
+   Set these Space variables to **absolute paths inside the image or mounted
+   data directory**, then restart the Space:
+
+   | Variable | Value |
+   | --- | --- |
+   | `M2MR_SAM2_PYTHON` | SAM 2 environment's Python executable |
+   | `M2MR_TRIPOSR_PYTHON` | TripoSR environment's Python executable |
+   | `M2MR_TRIPOSR_DIR` | TripoSR checkout containing `run.py` |
+   | `M2MR_MEGAPOSE_PYTHON` | MegaPose conda environment's Python executable |
+   | `MEGAPOSE_DATA_DIR` | Existing MegaPose data directory containing `megapose-models/` |
+
+`ffprobe` must also be on PATH (the base Dockerfile installs it). Hugging Face
+checkpoints are cached under the configured weights directory; MegaPose weights
+are obtained separately. This is an experimental integration and these
+installation combinations have not been verified together. A missing runtime
+or model reports an error instead of silently returning a body-only result.
+Review all model, dependency, generated-content and source-media rights
+before use; see [`NOTICE.md`](../NOTICE.md).
 
 ### Main-person tracking for background false positives
 

@@ -29,8 +29,9 @@ RUN python -m pip install -r requirements-space.txt \
 COPY app.py ./
 COPY scripts/test_sam3d.py ./scripts/test_sam3d.py
 COPY scripts/test_mannequin.py ./scripts/test_mannequin.py
+COPY scripts/test_objects.py ./scripts/test_objects.py
 
-RUN python -m unittest scripts.test_sam3d scripts.test_mannequin
+RUN python -m unittest scripts.test_sam3d scripts.test_mannequin scripts.test_objects
 
 EXPOSE 7860
 

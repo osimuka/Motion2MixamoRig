@@ -111,6 +111,20 @@ def _diffuse_atlas(samples: np.ndarray) -> tuple[bytes, np.ndarray]:
     return png, np.repeat(uv, 3, axis=0).astype(np.float32)
 
 
+def _write_binary_gltf(path: Path, gltf: dict, binary: bytes) -> Path:
+    json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
+    json_bytes += b" " * ((4 - len(json_bytes) % 4) % 4)
+    binary += b"\x00" * ((4 - len(binary) % 4) % 4)
+    total = 12 + 8 + len(json_bytes) + 8 + len(binary)
+    header = struct.pack("<III", _GLTF_MAGIC, 2, total)
+    json_chunk = struct.pack("<II", len(json_bytes), _JSON_CHUNK) + json_bytes
+    bin_chunk = struct.pack("<II", len(binary), _BIN_CHUNK) + binary
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(header + json_chunk + bin_chunk)
+    return path
+
+
 def write_glb(
     path: Path,
     asset: YBotAsset,
@@ -301,19 +315,4 @@ def write_glb(
             "samplers": [{"magFilter": 9728, "minFilter": 9728, "wrapS": 33071, "wrapT": 33071}],
         })
 
-    json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
-    json_pad = (4 - len(json_bytes) % 4) % 4
-    json_bytes = json_bytes + b" " * json_pad
-    bin_bytes = blob.dumps()
-    bin_pad = (4 - len(bin_bytes) % 4) % 4
-    bin_bytes = bin_bytes + b"\x00" * bin_pad
-
-    total = 12 + 8 + len(json_bytes) + 8 + len(bin_bytes)
-    header = struct.pack("<III", _GLTF_MAGIC, 2, total)
-    json_chunk = struct.pack("<II", len(json_bytes), _JSON_CHUNK) + json_bytes
-    bin_chunk = struct.pack("<II", len(bin_bytes), _BIN_CHUNK) + bin_bytes
-
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(header + json_chunk + bin_chunk)
-    return path
+    return _write_binary_gltf(path, gltf, blob.dumps())

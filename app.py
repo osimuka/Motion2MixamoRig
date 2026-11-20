@@ -45,13 +45,14 @@ BUNDLE_FILES = (
 
 
 class SpaceProgressWriter(ProgressWriter):
-    def __init__(self, progress: gr.Progress) -> None:
+    def __init__(self, progress: gr.Progress, scale: float = 1.0) -> None:
         super().__init__()
         self.progress = progress
+        self.scale = scale
 
     def emit(self, stage: str, progress: float, message: str) -> dict:
         event = super().emit(stage, progress, message)
-        self.progress(event["progress"], desc=event["message"])
+        self.progress(event["progress"] * self.scale, desc=event["message"])
         return event
 
 
@@ -79,17 +80,113 @@ def _validate_upload(
         raise gr.Error(f"{label} is not usable: {problem}")
 
 
-def _zip_outputs(run_dir: Path) -> Path:
+def _zip_outputs(run_dir: Path, *, include_object: bool = False) -> Path:
     bundle_dir = GRADIO_TEMP_DIR / "downloads"
     bundle_dir.mkdir(parents=True, exist_ok=True)
     archive = bundle_dir / f"motion2mixamorig-{uuid.uuid4().hex}.zip"
     included = [run_dir / name for name in BUNDLE_FILES if (run_dir / name).is_file()]
     if not (run_dir / "mixamo_character.glb").is_file():
         raise RuntimeError("The pipeline completed without producing mixamo_character.glb.")
+    if include_object:
+        from motion2mixamorig.object_tracking import OBJECT_FILES
+
+        missing = [name for name in OBJECT_FILES if not (run_dir / name).is_file()]
+        if missing:
+            raise RuntimeError(f"Object capture did not produce: {', '.join(missing)}.")
+        included.extend(run_dir / name for name in OBJECT_FILES)
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
         for file in included:
             bundle.write(file, arcname=file.name)
     return archive
+
+
+def _video_frame(video: str | None, frame_number: int | float) -> tuple:
+    import cv2
+
+    if not video or not Path(video).is_file():
+        raise gr.Error("Upload a video before selecting an object.")
+    try:
+        frame_index = int(frame_number)
+        if frame_index != frame_number or frame_index < 0:
+            raise ValueError
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise gr.Error("Object frame must be a non-negative whole number.") from exc
+    capture = cv2.VideoCapture(video)
+    try:
+        if not capture.isOpened() or not capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index):
+            raise gr.Error("Cannot seek to the selected video frame.")
+        ok, image = capture.read()
+        if not ok or abs(capture.get(cv2.CAP_PROP_POS_FRAMES) - frame_index - 1) > 0.5:
+            raise gr.Error("The requested object frame is not available in this video.")
+        return cv2.cvtColor(image, cv2.COLOR_BGR2RGB), frame_index
+    finally:
+        capture.release()
+
+
+def preview_object_frame(video: str | None, frame_number: int | float):
+    image, index = _video_frame(video, frame_number)
+    state = {
+        "video": str(Path(video).resolve()), "frame": index,
+        "width": image.shape[1], "height": image.shape[0], "points": [],
+    }
+    return image, state, "Click two opposite corners around the object."
+
+
+def select_object_point(
+    video: str | None, frame_number: int | float, state: dict | None, event: gr.SelectData,
+):
+    import cv2
+
+    if not state or not video or str(Path(video).resolve()) != state["video"] or frame_number != state["frame"]:
+        raise gr.Error("Load the object frame again after changing the video or frame number.")
+    image, _ = _video_frame(video, frame_number)
+    x, y = event.index
+    x, y = int(x), int(y)
+    if not (0 <= x < state["width"] and 0 <= y < state["height"]):
+        raise gr.Error("Click inside the object frame.")
+    points = list(state["points"])
+    points = [] if len(points) == 2 else points
+    points.append((x, y))
+    state = {**state, "points": points}
+    cv2.circle(image, (x, y), 5, (255, 170, 0), -1)
+    if len(points) == 1:
+        message = "Click the opposite corner."
+    else:
+        cv2.rectangle(image, points[0], points[1], (255, 170, 0), 2)
+        message = "Object selected. Click again to start a new box."
+    return image, state, message
+
+
+def _object_selection(
+    video: str | None, frame_number: int | float, state: dict | None, size_cm: float | None,
+):
+    import numpy as np
+    from motion2mixamorig.object_tracking import ObjectSelection
+
+    if (
+        not state or not video or str(Path(video).resolve()) != state["video"]
+        or frame_number != state["frame"] or len(state["points"]) != 2
+    ):
+        raise gr.Error("Load the object frame and click two opposite corners around the object.")
+    try:
+        size = float(size_cm)
+    except (TypeError, ValueError) as exc:
+        raise gr.Error("Object size must be a positive number of centimetres.") from exc
+    if not np.isfinite(size) or size <= 0:
+        raise gr.Error("Object size must be a positive number of centimetres.")
+    (x0, y0), (x1, y1) = state["points"]
+    box = (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
+    if box[2] - box[0] < 2 or box[3] - box[1] < 2:
+        raise gr.Error("The object selection is too small; select it again.")
+    return ObjectSelection(state["frame"], box, state["width"], state["height"], size / 100)
+
+
+def _release_cuda_memory() -> None:
+    import gc
+    import torch
+
+    gc.collect()
+    torch.cuda.empty_cache()
 
 
 def generate(
@@ -100,6 +197,10 @@ def generate(
     detect_hands: bool = False,
     hand_smooth_s: float = 0.08,
     track_person: bool = False,
+    capture_held_object: bool = False,
+    object_frame: int = 0,
+    object_state: dict | None = None,
+    object_size_cm: float | None = None,
     progress: gr.Progress = gr.Progress(),
 ) -> tuple[str, str]:
     uploads = (video_upload, image_upload, rig_upload)
@@ -138,8 +239,20 @@ def generate(
             else:
                 raise gr.Error("Choose either Video or Still image.")
 
+            if capture_held_object:
+                if video is None:
+                    raise gr.Error("Object capture currently supports video input only.")
+                from motion2mixamorig.object_tracking import object_runtimes
+
+                selection = _object_selection(video_upload, object_frame, object_state, object_size_cm)
+                try:
+                    runtimes = object_runtimes()
+                except RuntimeError as exc:
+                    raise gr.Error(str(exc)) from exc
+
             device = "cuda"
             run_dir = job_dir / "output"
+            body_progress_fraction = 0.5 if capture_held_object else 1.0
             try:
                 run_pipeline(
                     video,
@@ -152,7 +265,7 @@ def generate(
                     track_person=track_person,
                     verbose=False,
                     output_dir=run_dir,
-                    progress=SpaceProgressWriter(progress),
+                    progress=SpaceProgressWriter(progress, scale=body_progress_fraction),
                     no_preview=False,
                 )
             except Exception as exc:
@@ -160,7 +273,23 @@ def generate(
                 code, message = classify_error(exc)
                 raise gr.Error(f"Generation failed ({code}): {message}") from exc
 
-            archive = _zip_outputs(run_dir)
+            if capture_held_object:
+                from motion2mixamorig.object_tracking import capture_object
+
+                try:
+                    _release_cuda_memory()
+                    capture_object(
+                        video, run_dir / "skeleton_motion.npz", selection, run_dir, runtimes,
+                        progress=lambda value, message: progress(
+                            body_progress_fraction + (1 - body_progress_fraction) * value,
+                            desc=message,
+                        ),
+                    )
+                except Exception as exc:
+                    LOGGER.exception("Object capture failed")
+                    raise gr.Error(f"Object capture failed: {exc}") from exc
+
+            archive = _zip_outputs(run_dir, include_object=capture_held_object)
             return (
                 f"Finished on {device.upper()}. The ZIP contains the GLB, GIF preview, and available "
                 "motion/diagnostics files. Uploaded inputs and intermediate run files "
@@ -170,6 +299,12 @@ def generate(
                     "Main-person tracking was enabled: inspect subject selection; "
                     "extra detections may have been ignored. "
                     if track_person else ""
+                )
+                + (
+                    "The object GLB and motion are approximate and camera-relative; "
+                    "they are not attached or aligned to the character. "
+                    "Inspect object_metadata.json and missing frames. "
+                    if capture_held_object else ""
                 )
                 + (
                     "Quality report: diagnostics.json in the ZIP."
@@ -212,8 +347,8 @@ character with all 30 Mixamo finger bones (the Default Mannequin has them).
 Occluded hands may still be guessed incorrectly; full inference is slower.
 
 Uploaded video/image and Mixamo FBX files are used for this job only. The output
-ZIP is kept in temporary Space cache for up to 24 hours; run files and uploads
-are not retained in the attached Storage Bucket.
+ZIP and object-selection previews are kept in temporary Space cache for up to
+24 hours; run files and uploads are not retained in the attached Storage Bucket.
 """
     )
     with gr.Row():
@@ -260,6 +395,31 @@ are not retained in the attached Storage Bucket.
         minimum=0, maximum=0.3, value=0.08, step=0.01,
         label="Finger smoothing (seconds)",
     )
+    with gr.Accordion("Capture a separate object (video only, experimental)", open=False):
+        capture_held_object = gr.Checkbox(
+            label="Capture the selected object", value=False,
+            info=(
+                "Requires separately configured SAM 2, TripoSR and MegaPose GPU runtimes. "
+                "The result is not attached or aligned to the character."
+            ),
+        )
+        with gr.Row():
+            object_frame = gr.Number(value=0, precision=0, label="Frame where the object is visible (0-based)")
+            object_size = gr.Number(
+                value=None, minimum=0.01, label="Approximate longest object dimension (cm)",
+            )
+        load_object_frame = gr.Button("Load object frame")
+        object_preview = gr.Image(label="Click two opposite corners around the object", interactive=False)
+        object_state = gr.State()
+        object_message = gr.Textbox(label="Object selection", interactive=False)
+        load_object_frame.click(
+            preview_object_frame, inputs=[video_upload, object_frame],
+            outputs=[object_preview, object_state, object_message], api_name=False,
+        )
+        object_preview.select(
+            select_object_point, inputs=[video_upload, object_frame, object_state],
+            outputs=[object_preview, object_state, object_message], api_name=False,
+        )
     run_button = gr.Button("Generate GLB", variant="primary")
     status = gr.Textbox(label="Status", interactive=False)
     result = gr.File(label="Download output bundle", interactive=False)
@@ -268,6 +428,7 @@ are not retained in the attached Storage Bucket.
         inputs=[
             media_type, video_upload, image_upload, rig_upload,
             detect_hands, hand_smooth, track_person,
+            capture_held_object, object_frame, object_state, object_size,
         ],
         outputs=[status, result],
         concurrency_limit=1,

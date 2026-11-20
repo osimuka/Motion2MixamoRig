@@ -1,8 +1,9 @@
-# SAM-only inference environment; GVHMR/SMPL-X/HaMeR are not installed.
+# Base SAM Space environment; object-model runtimes are installed separately.
 numpy>=1.26,<2
 opencv-python>=4.8,<4.12
 Pillow
 scipy
+trimesh>=4,<5
 einops
 timm
 termcolor

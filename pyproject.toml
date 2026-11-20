@@ -19,6 +19,9 @@ dependencies = [
     "gvhmr[preproc,rtmpose]>=1.6",
 ]
 
+[project.optional-dependencies]
+objects = ["trimesh>=4,<5"]
+
 [project.scripts]
 m2mr = "motion2mixamorig.cli:main"
 

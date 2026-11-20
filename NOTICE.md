@@ -36,6 +36,27 @@ for pretrained-weight and dataset terms. It does not use Ultralytics YOLO.
 
 https://pytorch.org/vision/stable/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html
 
+## Optional object capture
+
+Object capture can use Meta's SAM 2.1 Hiera Tiny, Stability AI/Tripo AI's
+TripoSR, and Inria/NVIDIA's MegaPose. SAM 2's code and the Hugging Face model
+card state Apache-2.0; TripoSR's code and model card state MIT. MegaPose's
+repository states Apache-2.0 for its code, but its separately distributed
+pretrained weights and training data must be reviewed independently; do not
+assume the code license automatically covers them.
+
+The model environments have their own transitive licenses, including
+torchmcubes (MPL-2.0) and Panda3D. No object-model weights or upstream source
+are redistributed by this repository. Users must review the applicable model,
+dependency, training-data, generated-content and source-media terms.
+
+https://github.com/facebookresearch/sam2
+https://huggingface.co/facebook/sam2.1-hiera-tiny
+https://github.com/VAST-AI-Research/TripoSR
+https://huggingface.co/stabilityai/TripoSR
+https://github.com/megapose6d/megapose6d
+https://github.com/tatsy/torchmcubes
+
 ## SMPL-X body model
 
 The SMPL-X body model is registration-gated and licensed by the Max Planck
