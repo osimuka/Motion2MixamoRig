@@ -71,6 +71,9 @@ character empty for the mannequin, select **Generate GLB**, and download the ZIP
 For background false-positive person detections, opt into **Track main person**
 (`--set-extractor sam3d --track-person` in the CLI). It follows box overlap
 and stops on lost or ambiguous matches; strict detection remains the default.
+If a Space video starts empty, detection retries about every 100 ms until a
+person appears. The full clip is kept, with the first detected pose held over
+the empty opening; a person lost later still stops the run.
 The CLI and Blender still use
 GVHMR by default; their SMPL-X instructions below are unchanged.
 See the [Hugging Face deployment guide](docs/huggingface-space.md) for private
