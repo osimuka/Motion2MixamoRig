@@ -270,6 +270,90 @@ class SamInferenceTests(unittest.TestCase):
                             np.testing.assert_array_equal(data["sam_person_boxes"][0], [0, 0, 8, 8])
                             self.assertEqual(int(data["sam_extra_detection_frames"]), 0)
 
+
+class SamEmptyOpeningTests(unittest.TestCase):
+    def setUp(self):
+        import cv2
+
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.video = self.root / "clip.avi"
+        writer = cv2.VideoWriter(
+            str(self.video), cv2.VideoWriter_fourcc(*"MJPG"), 30, (32, 32),
+        )
+        self.assertTrue(writer.isOpened())
+        for _ in range(12):
+            writer.write(np.zeros((32, 32, 3), dtype=np.uint8))
+        writer.release()
+        for name in ("require_cuda", "load_estimator", "load_person_detector", "person_boxes"):
+            patcher = patch(f"motion2mixamorig.extractors.sam3d.{name}")
+            setattr(self, name, patcher.start())
+            self.addCleanup(patcher.stop)
+        self.empty = np.empty((0, 4), dtype=np.float32)
+        self.person = np.array([[0, 0, 20, 32]], dtype=np.float32)
+        self.load_estimator.return_value.process_one_image.return_value = [{
+            "pred_keypoints_3d": np.arange(70 * 3, dtype=float).reshape(70, 3) / 100,
+            "pred_cam_t": np.ones(3),
+        }]
+
+    def extract(self, **kwargs):
+        return Sam3dExtractor().extract(
+            self.video, self.root / "skeleton.npz", work_dir=self.root,
+            device="cuda", verbose=False, **kwargs,
+        )
+
+    def test_delayed_entry_preserves_timing_body_hands_and_tracking(self):
+        for tracking in (False, True):
+            with self.subTest(tracking=tracking):
+                self.person_boxes.reset_mock()
+                self.person_boxes.side_effect = [self.empty] * 2 + [self.person] * 6
+                with self.assertLogs("motion2mixamorig.extractors.sam3d", level="WARNING"):
+                    result = self.extract(detect_hands=True, track_person=tracking)
+                self.assertEqual(self.person_boxes.call_count, 8)
+                motion = load_human_motion(result)
+                self.assertEqual(motion.n_frames, 12)
+                self.assertAlmostEqual(motion.n_frames / motion.fps, 0.4, places=3)
+                with np.load(result) as data:
+                    self.assertEqual(int(data["sam_first_person_frame"]), 6)
+                    np.testing.assert_allclose(
+                            data["joints_3d"][:7], np.repeat(data["joints_3d"][6:7], 7, axis=0),
+                    )
+                    self.assertEqual(data["sam_hand_keypoints"].shape, (12, 2, 21, 3))
+                    np.testing.assert_array_equal(
+                            data["sam_hand_keypoints"][:7],
+                            np.repeat(data["sam_hand_keypoints"][6:7], 7, axis=0),
+                    )
+                    if tracking:
+                            np.testing.assert_array_equal(
+                                data["sam_person_boxes"], np.repeat(self.person, 12, axis=0),
+                            )
+
+    def test_last_frame_is_checked_even_between_retries(self):
+        self.person_boxes.side_effect = [self.empty] * 4 + [self.person]
+        with self.assertLogs("motion2mixamorig.extractors.sam3d", level="WARNING"):
+            result = self.extract()
+        self.assertEqual(self.person_boxes.call_count, 5)
+        with np.load(result) as data:
+            self.assertEqual(int(data["sam_first_person_frame"]), 11)
+            self.assertEqual(len(data["joints_3d"]), 12)
+
+    def test_empty_clip_lost_person_and_crowds_still_fail(self):
+        cases = (
+            ([self.empty] * 5, "no person detected throughout"),
+            ([self.empty, self.person, self.empty], "frame 4"),
+            ([self.empty, np.repeat(self.person, 2, axis=0)], "detected 2 people"),
+        )
+        for detections, error in cases:
+            for tracking in (False, True):
+                with self.subTest(error=error, tracking=tracking):
+                    self.person_boxes.side_effect = detections.copy()
+                    with self.assertLogs("motion2mixamorig.extractors.sam3d", level="WARNING"):
+                            with self.assertRaisesRegex(
+                                ValueError, "ambiguous" if tracking and "2 people" in error else error,
+                            ):
+                                self.extract(track_person=tracking)
+
     @patch("motion2mixamorig.checks._count_people", side_effect=AssertionError("YOLO imported"))
     def test_decode_checks_can_avoid_gvhmr_detector(self, _count):
         import cv2

@@ -33,6 +33,10 @@ CAMERA_CONVENTION = (
 LOGGER = logging.getLogger(__name__)
 
 
+class NoPersonDetected(ValueError):
+    """A decoded frame has no person, rather than an invalid or ambiguous pose."""
+
+
 class MainPersonTracker:
     """Conservative box-overlap tracking, not appearance-based identification."""
 
@@ -223,6 +227,8 @@ def infer_frame(
     import cv2
 
     boxes = person_boxes(frame, detector, "cuda")
+    if len(boxes) == 0:
+        raise NoPersonDetected(f"SAM frame {index}: no person detected.")
     if tracker is not None:
         boxes = tracker.select(boxes, index)
     elif len(boxes) != 1:
@@ -300,6 +306,7 @@ class Sam3dExtractor:
         frames: list[np.ndarray] = []
         hand_frames: list[np.ndarray] | None = [] if detect_hands else None
         tracker = MainPersonTracker() if track_person else None
+        first_person_frame = 0
         if is_still:
             image = cv2.imread(str(source))
             if image is None:
@@ -320,19 +327,53 @@ class Sam3dExtractor:
                 native_fps = float(capture.get(cv2.CAP_PROP_FPS))
                 if not np.isfinite(native_fps) or native_fps <= 0 or expected <= 0:
                     raise ValueError("Video has invalid timing; re-export as a constant-frame-rate MP4")
+                retry_frames = max(1, int(np.ceil(native_fps * 0.1)))
+                decoded = 0
                 while True:
                     ok, image = capture.read()
                     if not ok:
                         break
-                    frames.append(infer_frame(
-                        image, estimator, detector, len(frames), hand_frames=hand_frames,
-                        tracker=tracker,
-                    ))
+                    index = decoded
+                    decoded += 1
+                    if not frames and index % retry_frames != 0 and index != expected - 1:
+                        continue
+                    try:
+                        pose = infer_frame(
+                            image, estimator, detector, index, hand_frames=hand_frames,
+                            tracker=tracker,
+                        )
+                    except NoPersonDetected:
+                        if frames:
+                            raise
+                        if index == 0:
+                            LOGGER.warning(
+                                "SAM: no person in the opening frame; retrying every "
+                                "%.0f ms without trimming the video",
+                                1000 * retry_frames / native_fps,
+                            )
+                        continue
+                    if not frames:
+                        first_person_frame = index
+                        frames.extend([pose] * index)
+                        if hand_frames is not None:
+                            hand_frames[:0] = [hand_frames[0]] * index
+                        if index:
+                            LOGGER.warning(
+                                "SAM: first person detected at frame %d (%.3f s); "
+                                "holding that pose for the %d opening frames",
+                                index, index / native_fps, index,
+                            )
+                    frames.append(pose)
                     if verbose and len(frames) % 30 == 0:
                         print(f"SAM 3D Body: {len(frames)}/{expected} frames", flush=True)
-                if not frames or abs(len(frames) - expected) > 1:
+                if not decoded or abs(decoded - expected) > 1:
                     raise ValueError(
-                        f"Video decoded {len(frames)} of {expected} frames; re-export the clip"
+                        f"Video decoded {decoded} of {expected} frames; re-export the clip"
+                    )
+                if not frames:
+                    raise NoPersonDetected(
+                        "SAM: no person detected throughout the video; "
+                        "use a clip with one clearly visible person."
                     )
                 fps = playback_fps(source, len(frames), fallback=native_fps)
             finally:
@@ -343,6 +384,10 @@ class Sam3dExtractor:
             selected = np.stack(tracker.boxes)
             if is_still:
                 selected = np.repeat(selected, len(joints), axis=0)
+            elif first_person_frame:
+                selected = np.concatenate((
+                    np.repeat(selected[:1], first_person_frame, axis=0), selected,
+                ))
             selection_arrays = {
                 "person_selection": np.array("main_person"),
                 "sam_person_boxes": selected,
@@ -377,6 +422,7 @@ class Sam3dExtractor:
             coordinate_convention=np.array(CAMERA_CONVENTION),
             model_id=np.array(MODEL_ID),
             model_revision=np.array(MODEL_REVISION),
+            sam_first_person_frame=np.array(first_person_frame, dtype=np.int64),
             **selection_arrays,
             **hand_arrays,
         )

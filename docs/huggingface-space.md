@@ -133,6 +133,14 @@ deployment. The uploader itself still accepts only binary FBX, not GLB.
    person visible head to toe and a fixed, level camera. Supported video
    extensions are `.avi`, `.mkv`, `.mov`, `.mp4`, and `.webm`.
    **Still image** accepts `.bmp`, `.jpeg`, `.jpg`, `.png`, and `.webp`.
+   If a video starts empty, SAM retries person detection about every 100 ms
+   until someone appears (also checking the last frame). The original video
+   is not trimmed: the animation holds the first detected pose during the
+   empty opening, preserving frame count and duration. This includes fingers
+   when enabled. `sam_first_person_frame` in `skeleton_motion.npz` records
+   where detection began; opening person boxes are held too in tracking mode.
+   An entirely empty clip, an empty still, multiple people in strict mode,
+   or a lost person after detection starts still reports an error.
 3. Leave **Optional character** empty to animate the Default Mannequin,
    or supply a binary Mixamo FBX in T-pose.
 4. Select **Generate GLB**. The first generation downloads model weights and
